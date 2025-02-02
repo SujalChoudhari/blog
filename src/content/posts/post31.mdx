@@ -1,0 +1,31 @@
+---
+title: How Code Comes to Life - Designing a Programming Language
+date: 2025-02-02
+description: Explore the process of designing a programming language, from idea to running code. Learn how compiled and interpreted languages differ and the importance of lexical analysis, syntax analysis, semantic analysis, optimization, code generation, and linking.
+tags: ["programming language design", "compiled languages", "interpreted languages", "lexical analysis", "syntax analysis", "semantic analysis", "optimization", "code generation", "linking"]
+author: Sujal Choudhari
+---
+
+## Designing a Programming Language: How Code Comes to Life
+
+Have you ever wondered how your code becomes actions on a computer? It's a fascinating process! This post explores the key steps in designing a programming language, from the initial idea to the running code.
+
+First, you choose between **compiled** and **interpreted** languages. Compiled languages (like C++) translate all code into machine code *before* running. This makes them fast but requires a separate compilation step. Interpreted languages (like Python) run code line by line. They're more flexible but can be slower. The best choice depends on the language's goals.
+
+Next, the computer needs to understand the code. This happens in two steps: **tokenization** and **parsing**.
+
+## Tokenization: Breaking Down the Code
+
+Imagine splitting a sentence into words. Tokenization does this with code. It breaks the code into meaningful pieces called "tokens." These can be keywords, variables, or operators.  For example, `x = 5 + 2;` becomes `x`, `=`, `5`, `+`, `2`, and `;`.
+
+## Parsing: Understanding the Structure
+
+Now, we need to understand how the "words" (tokens) fit together. Parsing arranges the tokens according to the language's rules. It checks if the code is correct, like making sure parentheses are used properly.  The result is often an **Abstract Syntax Tree (AST)**.
+
+## Abstract Syntax Tree (AST): The Code's Map
+
+The AST is like a map of the code's structure. It shows how the different parts of the code relate to each other, ignoring details like extra spaces. It's a clear way for the computer to understand the code.  Our example's AST would show the assignment of `5 + 2` to `x`.
+
+Finally, the AST is **evaluated**. This is where the code actually runs. The language's interpreter or compiler goes through the AST, performing the operations. In our example, `x` becomes 7.
+
+Designing a programming language is hard work. But understanding these basic ideas – **compilation vs. interpretation**, **tokenization**, **parsing**, and **AST evaluation** – helps you see how code becomes real. It's the journey from what we write to what the computer does.

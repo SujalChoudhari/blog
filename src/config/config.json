@@ -1,14 +1,14 @@
 {
   "site": {
-    "title": "Bookworm Light Astro | Blog Template",
-    "base_url": "https://bookworm-light-astro.vercel.app",
+    "title": "Sujal Choudhari | Blog",
+    "base_url": "https://sujal.xyz",
     "base_path": "/",
     "trailing_slash": false,
     "favicon": "/images/favicon.png",
     "logo": "/images/logo.png",
     "logo_width": "200",
     "logo_height": "34",
-    "logo_text": "Bookworm Light"
+    "logo_text": "Sujal Choudhari"
   },
 
   "settings": {
@@ -17,19 +17,19 @@
   },
 
   "metadata": {
-    "meta_author": "Themefisher",
+    "meta_author": "Sujal Choudhari",
     "meta_image": "/images/og-image.png",
-    "meta_description": "Bookworm Light Astro Blog Template"
+    "meta_description": "Sujal Choudhari | Blog"
   },
 
   "params": {
     "contact_form_action": "#",
-    "copyright": "Copyright © 2025 a theme by [Themefisher](https://themefisher.com)"
+    "copyright": "Copyright © 2025 | [Sujal Choudhari](https://sujal.xyz)"
   },
 
   "contactinfo": {
-    "address": "355 S Grand Ave <br/> Los Angeles, CA 90071",
-    "email": "info@bookworm.org",
-    "phone": "+800 567 1234"
+    "address": "Mumbai, India",
+    "email": "hello@sujal.xyz",
+    "phone": "+91 8408873439"
   }
 }
