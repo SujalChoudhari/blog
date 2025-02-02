@@ -1,0 +1,134 @@
+---
+title: Essential C++ Data Structures for Competitive Programming
+date: 2024-08-26
+description: An overview of essential C++ data structures for competitive programming.
+tags: ["C++", "data structures", "competitive programming"]
+author: Sujal Choudhari
+---
+
+
+# Essential C++ Data Structures for Competitive Programming
+## What is C++ STL?
+A standout feature of C++ is the Standard Template Library (STL), setting it apart from other programming languages.
+STL offers a collection of pre-defined templates, including containers, algorithms, and iterators, simplifying the
+implementation of various data structures without writing everything from scratch.
+
+## Containers and Functions in C++ STL
+
+### 1. unordered_set
+
+An unordered_set is a container that stores unique elements in no particular order. It allows fast retrieval of individual elements based on their value. Common functions include:
+
+* `insert(value)`: Adds an element to the set.
+* `find(value)`: Searches for an element and returns an iterator to it if found, otherwise returns the end iterator.
+* `erase(value)`: Removes an element from the set.
+
+### 2. vector
+
+A vector is a dynamic array that can resize itself automatically when an element is added or removed.
+It provides random access to elements. Common functions include:
+
+* `push_back(value)`: Adds an element to the end of the vector.
+* `pop_back()`: Removes the last element of the vector.
+* `at(index)`: Returns a reference to the element at the specified position.
+* `size()`: Returns the number of elements in the vector.
+
+### 3. set
+
+A set is a container that stores unique elements in a specific order. Elements are automatically sorted. Common functions include:
+
+* `insert(value)`: Adds an element to the set.
+* `find(value)`: Searches for an element and returns an iterator to it if found.
+* `erase(value)`: Removes an element from the set.
+
+### 4. unordered_multiset
+
+An unordered_multiset is similar to an unordered_set, but it allows duplicate elements.
+Common functions include:
+
+* `insert(value)`: Adds an element to the multiset.
+* `count(value)`: Returns the number of occurrences of an element.
+* `erase(value)`: Removes all occurrences of an element.
+
+### 5. multiset
+
+A multiset is like a set, but it allows duplicate elements, and they are stored in a sorted order. Common functions include:
+
+* `insert(value)`: Adds an element to the multiset.
+* `count(value)`: Returns the number of occurrences of an element.
+* `erase(value)`: Removes all occurrences of an element.
+
+### 6. unordered_map
+
+An unordered_map is a key-value pair container where keys are unique, but the order of elements is not maintained.
+Common functions include:
+
+* `insert({key, value})`: Adds a key-value pair to the map.
+* `find(key)`: Searches for an element by its key and returns an iterator to it if found.
+* `erase(key)`: Removes the element associated with the given key.
+* `operator[key]`: Accesses the value associated with the given key, inserting a new key-value pair if it doesn't exist.
+
+### 7. map
+
+A map is an associative container that stores elements in key-value pairs with unique keys. Elements are stored in sorted order based on the key. Common functions include:
+
+* `insert({key, value})`: Adds a key-value pair to the map.
+* `find(key)`: Searches for an element by its key and returns an iterator to it if found.
+* `erase(key)`: Removes the element associated with the given key.
+* `operator[key]`: Accesses the value associated with the given key, inserting a new key-value pair if it doesn't exist.
+
+### 8. unordered_multimap
+
+An unordered_multimap is similar to an unordered_map, but it allows multiple pairs with the same key.
+Common functions include:
+
+* `insert({key, value})`: Adds a key-value pair to the multimap.
+* `equal_range(key)`: Returns a range of elements with the same key.
+* `erase(key)`: Removes all elements associated with the given key.
+
+### 9. queue
+
+A queue is a First-In-First-Out (FIFO) data structure that allows insertion at the back and removal from the front.
+Common functions include:
+
+* `push(value)`: Adds an element to the back of the queue.
+* `pop()`: Removes the front element of the queue.
+* `front()`: Returns a reference to the front element.
+* `back()`: Returns a reference to the back element.
+
+### 10. stack
+
+A stack is a Last-In-First-Out (LIFO) data structure that allows insertion and removal of elements at the top of the stack.
+Common functions include:
+
+* `push(value)`: Adds an element to the top of the stack.
+* `pop()`: Removes the top element of the stack.
+* `top()`: Returns a reference to the top element.
+
+### 11. deque
+
+A deque (double-ended queue) is a container that allows insertion and deletion of elements from both the front and the back.
+Common functions include:
+
+* `push_back(value)`: Adds an element to the back of the deque.
+* `push_front(value)`: Adds an element to the front of the deque.
+* `pop_back()`: Removes the last element of the deque.
+* `pop_front()`: Removes the first element of the deque.
+
+### 12. priority_queue
+
+A priority_queue is a type of queue where each element has a priority. Elements with higher priority are served before elements with lower priority, regardless of their order in the queue.
+Common functions include:
+
+* `push(value)`: Adds an element to the queue based on its priority.
+* `pop()`: Removes the element with the highest priority.
+* `top()`: Returns a reference to the element with the highest priority.
+
+### 13. multimap
+
+A multimap is similar to a map, but it allows multiple values for the same key. Elements are stored in sorted order based on the key. Common functions include:
+
+* `insert({key, value})`: Adds a key-value pair to the multimap.
+* `equal_range(key)`: Returns a range of elements with the same key.
+* `erase(key)`: Removes all elements associated with the given key.
+
