@@ -10,23 +10,19 @@
     "logo_height": "34",
     "logo_text": "Sujal Choudhari"
   },
-
   "settings": {
     "pagination": 5,
     "summary_length": 100
   },
-
   "metadata": {
     "meta_author": "Sujal Choudhari",
     "meta_image": "/images/og-image.png",
-    "meta_description": "Sujal Choudhari | Blog"
+    "meta_description": "Personal blog of Sujal Choudhari, a web developer specializing in JavaScript and React. I write about web development, programming, and technology, sharing articles, tutorials, and guides."
   },
-
   "params": {
     "contact_form_action": "#",
     "copyright": "Copyright © 2025 | [Sujal Choudhari](https://sujal.xyz)"
   },
-
   "contactinfo": {
     "address": "Mumbai, India",
     "email": "hello@sujal.xyz",
