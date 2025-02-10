@@ -2,319 +2,319 @@
       <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
         <channel>
           <title>Sujal's Blog</title>
-          <link>https://www.sujal.xyz</link>
+          <link>https://www.blog.sujal.xyz</link>
           <description>Latest updates from Sujal's blog</description>
           <language>en-us</language>
-          <lastBuildDate>Mon, 10 Feb 2025 13:19:36 GMT</lastBuildDate>
-          <atom:link href="https://www.sujal.xyz/rss.xml" rel="self" type="application/rss+xml" />
+          <lastBuildDate>Mon, 10 Feb 2025 13:59:28 GMT</lastBuildDate>
+          <atom:link href="https://www.blog.sujal.xyz/rss.xml" rel="self" type="application/rss+xml" />
           
     <item>
       <title>How Code Comes to Life - Designing a Programming Language</title>
-      <link>https://www.sujal.xyz/posts/post31</link>
+      <link>https://www.blog.sujal.xyz/posts/post31</link>
       <description>Explore the process of designing a programming language, from idea to running code. Learn how compiled and interpreted languages differ and the importance of lexical analysis, syntax analysis, semantic analysis, optimization, code generation, and linking.</description>
       <pubDate>Sun, 02 Feb 2025 00:00:00 GMT</pubDate>
       <author>rss@sujal.xyz (Sujal Choudhari)</author>
-      <guid>https://www.sujal.xyz/posts/post31</guid>
+      <guid>https://www.blog.sujal.xyz/posts/post31</guid>
     </item>
   
 
     <item>
       <title>Mastering Readability and SOLID Principles for Maintainable Code</title>
-      <link>https://www.sujal.xyz/posts/post30</link>
+      <link>https://www.blog.sujal.xyz/posts/post30</link>
       <description>Explore how readability and SOLID principles work together to create clean, scalable, and maintainable code. Learn practical strategies for organizing codebases and solving design challenges effectively.</description>
       <pubDate>Thu, 23 Jan 2025 00:00:00 GMT</pubDate>
       <author>rss@sujal.xyz (Sujal Choudhari)</author>
-      <guid>https://www.sujal.xyz/posts/post30</guid>
+      <guid>https://www.blog.sujal.xyz/posts/post30</guid>
     </item>
   
 
     <item>
       <title>The Art of Clean Code</title>
-      <link>https://www.sujal.xyz/posts/post29</link>
+      <link>https://www.blog.sujal.xyz/posts/post29</link>
       <description>Master essential code organization principles to build maintainable software. Learn about modularity, separation of concerns, project structure, and documentation best practices that will transform your development workflow.</description>
       <pubDate>Tue, 21 Jan 2025 00:00:00 GMT</pubDate>
       <author>rss@sujal.xyz (Sujal Choudhari)</author>
-      <guid>https://www.sujal.xyz/posts/post29</guid>
+      <guid>https://www.blog.sujal.xyz/posts/post29</guid>
     </item>
   
 
     <item>
       <title>10 Powerful Writing Lessons to Transform Your Prose</title>
-      <link>https://www.sujal.xyz/posts/post28</link>
+      <link>https://www.blog.sujal.xyz/posts/post28</link>
       <description>Master the art of impactful writing with these 10 transformative lessons. Learn how varying sentence length, using strong verbs, and other techniques will elevate your prose and keep readers engaged.</description>
       <pubDate>Mon, 20 Jan 2025 00:00:00 GMT</pubDate>
       <author>rss@sujal.xyz (Sujal Choudhari)</author>
-      <guid>https://www.sujal.xyz/posts/post28</guid>
+      <guid>https://www.blog.sujal.xyz/posts/post28</guid>
     </item>
   
 
     <item>
       <title>How to Write an Educational Book?</title>
-      <link>https://www.sujal.xyz/posts/post27</link>
+      <link>https://www.blog.sujal.xyz/posts/post27</link>
       <description>A comprehensive guide to writing an educational book that stands out. From finding your niche to marketing your masterpiece, this article covers every step of the journey.</description>
       <pubDate>Tue, 14 Jan 2025 00:00:00 GMT</pubDate>
       <author>rss@sujal.xyz (Sujal Choudhari)</author>
-      <guid>https://www.sujal.xyz/posts/post27</guid>
+      <guid>https://www.blog.sujal.xyz/posts/post27</guid>
     </item>
   
 
     <item>
       <title>My Guide to Winning the Smart India Hackathon (and Any Hackathon)</title>
-      <link>https://www.sujal.xyz/posts/post26</link>
+      <link>https://www.blog.sujal.xyz/posts/post26</link>
       <description>Tips and strategies for winning hackathons, based on my experiences at the Smart India Hackathon.</description>
       <pubDate>Sat, 21 Dec 2024 00:00:00 GMT</pubDate>
       <author>rss@sujal.xyz (Sujal Choudhari)</author>
-      <guid>https://www.sujal.xyz/posts/post26</guid>
+      <guid>https://www.blog.sujal.xyz/posts/post26</guid>
     </item>
   
 
     <item>
       <title>My Journey in Creating a Custom Operating System</title>
-      <link>https://www.sujal.xyz/posts/post25</link>
+      <link>https://www.blog.sujal.xyz/posts/post25</link>
       <description>Sharing the journey and learning experiences of building a custom operating system, MoldOS.</description>
       <pubDate>Wed, 16 Oct 2024 00:00:00 GMT</pubDate>
       <author>rss@sujal.xyz (Sujal Choudhari)</author>
-      <guid>https://www.sujal.xyz/posts/post25</guid>
+      <guid>https://www.blog.sujal.xyz/posts/post25</guid>
     </item>
   
 
     <item>
       <title>Essential Tmux Shortcuts and Configuration Explained</title>
-      <link>https://www.sujal.xyz/posts/post24</link>
+      <link>https://www.blog.sujal.xyz/posts/post24</link>
       <description>A deep dive into tmux shortcuts and configuration for enhanced productivity.</description>
       <pubDate>Sun, 13 Oct 2024 00:00:00 GMT</pubDate>
       <author>rss@sujal.xyz (Sujal Choudhari)</author>
-      <guid>https://www.sujal.xyz/posts/post24</guid>
+      <guid>https://www.blog.sujal.xyz/posts/post24</guid>
     </item>
   
 
     <item>
       <title>All about Hackathons!</title>
-      <link>https://www.sujal.xyz/posts/post23</link>
+      <link>https://www.blog.sujal.xyz/posts/post23</link>
       <description>Insights into building successful teams, selecting challenges, and creating impactful solutions in hackathons.</description>
       <pubDate>Sun, 22 Sep 2024 00:00:00 GMT</pubDate>
       <author>rss@sujal.xyz (Sujal Choudhari)</author>
-      <guid>https://www.sujal.xyz/posts/post23</guid>
+      <guid>https://www.blog.sujal.xyz/posts/post23</guid>
     </item>
   
 
     <item>
       <title>Crafting Compelling IEEE Papers- A Step-by-Step Guide</title>
-      <link>https://www.sujal.xyz/posts/post22</link>
+      <link>https://www.blog.sujal.xyz/posts/post22</link>
       <description>A step-by-step guide to writing and publishing IEEE papers.</description>
       <pubDate>Thu, 05 Sep 2024 00:00:00 GMT</pubDate>
       <author>rss@sujal.xyz (Sujal Choudhari)</author>
-      <guid>https://www.sujal.xyz/posts/post22</guid>
+      <guid>https://www.blog.sujal.xyz/posts/post22</guid>
     </item>
   
 
     <item>
       <title>A Comprehensive Guide to Scala</title>
-      <link>https://www.sujal.xyz/posts/post21</link>
+      <link>https://www.blog.sujal.xyz/posts/post21</link>
       <description>A comprehensive guide to getting started with Scala and its features.</description>
       <pubDate>Tue, 03 Sep 2024 00:00:00 GMT</pubDate>
       <author>rss@sujal.xyz (Sujal Choudhari)</author>
-      <guid>https://www.sujal.xyz/posts/post21</guid>
+      <guid>https://www.blog.sujal.xyz/posts/post21</guid>
     </item>
   
 
     <item>
       <title>Essential C++ Data Structures for Competitive Programming</title>
-      <link>https://www.sujal.xyz/posts/post20</link>
+      <link>https://www.blog.sujal.xyz/posts/post20</link>
       <description>An overview of essential C++ data structures for competitive programming.</description>
       <pubDate>Mon, 26 Aug 2024 00:00:00 GMT</pubDate>
       <author>rss@sujal.xyz (Sujal Choudhari)</author>
-      <guid>https://www.sujal.xyz/posts/post20</guid>
+      <guid>https://www.blog.sujal.xyz/posts/post20</guid>
     </item>
   
 
     <item>
       <title>Beyond Rendering</title>
-      <link>https://www.sujal.xyz/posts/post19</link>
+      <link>https://www.blog.sujal.xyz/posts/post19</link>
       <description>Announcing the release of "Coding Mastery- Beyond Rendering" and its significance in game development education.</description>
       <pubDate>Fri, 26 Jul 2024 00:00:00 GMT</pubDate>
       <author>rss@sujal.xyz (Sujal Choudhari)</author>
-      <guid>https://www.sujal.xyz/posts/post19</guid>
+      <guid>https://www.blog.sujal.xyz/posts/post19</guid>
     </item>
   
 
     <item>
       <title>Breaking Tutorial Hell</title>
-      <link>https://www.sujal.xyz/posts/post10</link>
+      <link>https://www.blog.sujal.xyz/posts/post10</link>
       <description>Strategies to break free from the endless cycle of tutorials and start building projects.</description>
       <pubDate>Wed, 10 Jul 2024 00:00:00 GMT</pubDate>
       <author>rss@sujal.xyz (Sujal Choudhari)</author>
-      <guid>https://www.sujal.xyz/posts/post10</guid>
+      <guid>https://www.blog.sujal.xyz/posts/post10</guid>
     </item>
   
 
     <item>
       <title>How to Code Any Feature</title>
-      <link>https://www.sujal.xyz/posts/post11</link>
+      <link>https://www.blog.sujal.xyz/posts/post11</link>
       <description>Book summary exploring the limitations and challenges of current AI systems.</description>
       <pubDate>Wed, 10 Jul 2024 00:00:00 GMT</pubDate>
       <author>rss@sujal.xyz (Sujal Choudhari)</author>
-      <guid>https://www.sujal.xyz/posts/post11</guid>
+      <guid>https://www.blog.sujal.xyz/posts/post11</guid>
     </item>
   
 
     <item>
       <title>The Vital Role of Human Logic in Coding</title>
-      <link>https://www.sujal.xyz/posts/post12</link>
+      <link>https://www.blog.sujal.xyz/posts/post12</link>
       <description>Analyzing the limitations and challenges of current AI systems.</description>
       <pubDate>Wed, 10 Jul 2024 00:00:00 GMT</pubDate>
       <author>rss@sujal.xyz (Sujal Choudhari)</author>
-      <guid>https://www.sujal.xyz/posts/post12</guid>
+      <guid>https://www.blog.sujal.xyz/posts/post12</guid>
     </item>
   
 
     <item>
       <title>Design Patterns and SOLID Principles</title>
-      <link>https://www.sujal.xyz/posts/post13</link>
+      <link>https://www.blog.sujal.xyz/posts/post13</link>
       <description>Understanding the importance of design patterns and SOLID principles in software development.</description>
       <pubDate>Wed, 10 Jul 2024 00:00:00 GMT</pubDate>
       <author>rss@sujal.xyz (Sujal Choudhari)</author>
-      <guid>https://www.sujal.xyz/posts/post13</guid>
+      <guid>https://www.blog.sujal.xyz/posts/post13</guid>
     </item>
   
 
     <item>
       <title>The Bedrock of Efficient Programming</title>
-      <link>https://www.sujal.xyz/posts/post14</link>
+      <link>https://www.blog.sujal.xyz/posts/post14</link>
       <description>Discussing the importance of data structures and algorithms in efficient programming.</description>
       <pubDate>Wed, 10 Jul 2024 00:00:00 GMT</pubDate>
       <author>rss@sujal.xyz (Sujal Choudhari)</author>
-      <guid>https://www.sujal.xyz/posts/post14</guid>
+      <guid>https://www.blog.sujal.xyz/posts/post14</guid>
     </item>
   
 
     <item>
       <title>My Gateway to Coding Mastery</title>
-      <link>https://www.sujal.xyz/posts/post15</link>
+      <link>https://www.blog.sujal.xyz/posts/post15</link>
       <description>Sharing insights from my journey in game development and its impact on my coding skills.</description>
       <pubDate>Wed, 10 Jul 2024 00:00:00 GMT</pubDate>
       <author>rss@sujal.xyz (Sujal Choudhari)</author>
-      <guid>https://www.sujal.xyz/posts/post15</guid>
+      <guid>https://www.blog.sujal.xyz/posts/post15</guid>
     </item>
   
 
     <item>
       <title>A Deep Dive into Coding Game Features</title>
-      <link>https://www.sujal.xyz/posts/post16</link>
+      <link>https://www.blog.sujal.xyz/posts/post16</link>
       <description>A comprehensive guide to planning and implementing game features.</description>
       <pubDate>Wed, 10 Jul 2024 00:00:00 GMT</pubDate>
       <author>rss@sujal.xyz (Sujal Choudhari)</author>
-      <guid>https://www.sujal.xyz/posts/post16</guid>
+      <guid>https://www.blog.sujal.xyz/posts/post16</guid>
     </item>
   
 
     <item>
       <title>Mastering Skills Through Continuous Learning</title>
-      <link>https://www.sujal.xyz/posts/post17</link>
+      <link>https://www.blog.sujal.xyz/posts/post17</link>
       <description>Exploring the importance of consistent practice in mastering coding skills.</description>
       <pubDate>Wed, 10 Jul 2024 00:00:00 GMT</pubDate>
       <author>rss@sujal.xyz (Sujal Choudhari)</author>
-      <guid>https://www.sujal.xyz/posts/post17</guid>
+      <guid>https://www.blog.sujal.xyz/posts/post17</guid>
     </item>
   
 
     <item>
       <title>Hacktoberfest Hall Fame</title>
-      <link>https://www.sujal.xyz/posts/post2</link>
+      <link>https://www.blog.sujal.xyz/posts/post2</link>
       <description>Celebrating achievements and contributions during Hacktoberfest.</description>
       <pubDate>Tue, 09 Jul 2024 00:00:00 GMT</pubDate>
       <author>rss@sujal.xyz (Sujal Choudhari)</author>
-      <guid>https://www.sujal.xyz/posts/post2</guid>
+      <guid>https://www.blog.sujal.xyz/posts/post2</guid>
     </item>
   
 
     <item>
       <title>Value of Reinventing Wheel</title>
-      <link>https://www.sujal.xyz/posts/post8</link>
+      <link>https://www.blog.sujal.xyz/posts/post8</link>
       <description>Discussing the benefits and insights gained from reinventing the wheel in coding.</description>
       <pubDate>Tue, 09 Jul 2024 00:00:00 GMT</pubDate>
       <author>rss@sujal.xyz (Sujal Choudhari)</author>
-      <guid>https://www.sujal.xyz/posts/post8</guid>
+      <guid>https://www.blog.sujal.xyz/posts/post8</guid>
     </item>
   
 
     <item>
       <title>Coding Mastery Rendering</title>
-      <link>https://www.sujal.xyz/posts/post9</link>
+      <link>https://www.blog.sujal.xyz/posts/post9</link>
       <description>Exploring advanced rendering techniques for coding mastery.</description>
       <pubDate>Tue, 09 Jul 2024 00:00:00 GMT</pubDate>
       <author>rss@sujal.xyz (Sujal Choudhari)</author>
-      <guid>https://www.sujal.xyz/posts/post9</guid>
+      <guid>https://www.blog.sujal.xyz/posts/post9</guid>
     </item>
   
 
     <item>
       <title>Enshitification Web Garbage</title>
-      <link>https://www.sujal.xyz/posts/post1</link>
+      <link>https://www.blog.sujal.xyz/posts/post1</link>
       <description>Exploring the concept of enshitification and its impact on the web.</description>
       <pubDate>Mon, 08 Jul 2024 00:00:00 GMT</pubDate>
       <author>rss@sujal.xyz (Sujal Choudhari)</author>
-      <guid>https://www.sujal.xyz/posts/post1</guid>
+      <guid>https://www.blog.sujal.xyz/posts/post1</guid>
     </item>
   
 
     <item>
       <title>Receiving Sanman Chinh</title>
-      <link>https://www.sujal.xyz/posts/post7</link>
+      <link>https://www.blog.sujal.xyz/posts/post7</link>
       <description>Reflecting on the honor of receiving the Sanman Chinh award.</description>
       <pubDate>Sun, 05 May 2024 00:00:00 GMT</pubDate>
       <author>rss@sujal.xyz (Sujal Choudhari)</author>
-      <guid>https://www.sujal.xyz/posts/post7</guid>
+      <guid>https://www.blog.sujal.xyz/posts/post7</guid>
     </item>
   
 
     <item>
       <title>Winning Buildathon LLM</title>
-      <link>https://www.sujal.xyz/posts/post6</link>
+      <link>https://www.blog.sujal.xyz/posts/post6</link>
       <description>Detailing the strategies and efforts that led to winning Buildathon LLM.</description>
       <pubDate>Tue, 23 Apr 2024 00:00:00 GMT</pubDate>
       <author>rss@sujal.xyz (Sujal Choudhari)</author>
-      <guid>https://www.sujal.xyz/posts/post6</guid>
+      <guid>https://www.blog.sujal.xyz/posts/post6</guid>
     </item>
   
 
     <item>
       <title>Hackathon Journey Mumbai</title>
-      <link>https://www.sujal.xyz/posts/post5</link>
+      <link>https://www.blog.sujal.xyz/posts/post5</link>
       <description>Recounting the journey and experiences at a hackathon in Mumbai.</description>
       <pubDate>Wed, 21 Feb 2024 00:00:00 GMT</pubDate>
       <author>rss@sujal.xyz (Sujal Choudhari)</author>
-      <guid>https://www.sujal.xyz/posts/post5</guid>
+      <guid>https://www.blog.sujal.xyz/posts/post5</guid>
     </item>
   
 
     <item>
       <title>First Book Coding Mastery</title>
-      <link>https://www.sujal.xyz/posts/post4</link>
+      <link>https://www.blog.sujal.xyz/posts/post4</link>
       <description>Announcing the release of my first book on coding mastery.</description>
       <pubDate>Wed, 10 Jan 2024 00:00:00 GMT</pubDate>
       <author>rss@sujal.xyz (Sujal Choudhari)</author>
-      <guid>https://www.sujal.xyz/posts/post4</guid>
+      <guid>https://www.blog.sujal.xyz/posts/post4</guid>
     </item>
   
 
     <item>
       <title>Victory at SIH23</title>
-      <link>https://www.sujal.xyz/posts/post3</link>
+      <link>https://www.blog.sujal.xyz/posts/post3</link>
       <description>Sharing the experience and success at Smart India Hackathon 2023.</description>
       <pubDate>Sat, 30 Dec 2023 00:00:00 GMT</pubDate>
       <author>rss@sujal.xyz (Sujal Choudhari)</author>
-      <guid>https://www.sujal.xyz/posts/post3</guid>
+      <guid>https://www.blog.sujal.xyz/posts/post3</guid>
     </item>
   
 
     <item>
       <title>Why am I Blogging?</title>
-      <link>https://www.sujal.xyz/posts/post0</link>
+      <link>https://www.blog.sujal.xyz/posts/post0</link>
       <description>Discussing the reasons and motivations behind starting a blog.</description>
       <pubDate>Sun, 01 Jan 2023 00:00:00 GMT</pubDate>
       <author>rss@sujal.xyz (Sujal Choudhari)</author>
-      <guid>https://www.sujal.xyz/posts/post0</guid>
+      <guid>https://www.blog.sujal.xyz/posts/post0</guid>
     </item>
   
         </channel>

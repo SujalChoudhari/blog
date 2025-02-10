@@ -3,7 +3,7 @@ const path = require("path");
 
 // RSS Feed Constants
 const POSTS_DIR = path.resolve(__dirname, "./src/content/posts/");
-const SITE_URL = "https://www.sujal.xyz";
+const SITE_URL = "https://www.blog.sujal.xyz";
 const RSS_PATH = path.resolve(__dirname, "./public/rss.xml");
 const SITEMAP_PATH = path.resolve(__dirname, "./public/sitemap.xml");
 
