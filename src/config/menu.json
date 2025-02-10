@@ -5,8 +5,8 @@
       "url": "/"
     },
     {
-      "name": "Authors",
-      "url": "/authors"
+      "name": "Author",
+      "url": "/authors/sujal-choudhari"
     },
     {
       "name": "Categories",
@@ -17,7 +17,5 @@
       "url": "/tags"
     }
   ],
-  "footer": [
-
-  ]
+  "footer": []
 }

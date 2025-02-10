@@ -7,15 +7,14 @@ draft: false
 what_i_do:
   title: "What I Do"
   items:
-  - title: "Web Development"
-    description: "Specializing in creating dynamic and responsive web applications using modern frameworks and technologies."
+    - title: "Web Development"
+      description: "Specializing in creating dynamic and responsive web applications using modern frameworks and technologies."
 
-  - title: "Game Development"
-    description: "Designing and developing engaging games with a focus on user experience and performance."
+    - title: "Game Development"
+      description: "Designing and developing engaging games with a focus on user experience and performance."
 
-  - title: "Software Solutions"
-    description: "Building efficient and scalable software solutions tailored to meet specific client needs."
-
+    - title: "Software Solutions"
+      description: "Building efficient and scalable software solutions tailored to meet specific client needs."
 ---
 
 As a third-year Information Technology student at Dwarkadas J. Sanghvi College of Engineering, I have over five years of programming experience. My preferred languages are C++, Python, and TypeScript. I have also published books on Amazon and Gumroad.

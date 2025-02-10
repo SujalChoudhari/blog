@@ -3,29 +3,39 @@ title: The Art of Clean Code
 date: 2025-01-21
 description: Master essential code organization principles to build maintainable software. Learn about modularity, separation of concerns, project structure, and documentation best practices that will transform your development workflow.
 image: "/images/posts/29.jpg"
-tags: ["coding", "software development", "clean code", "code organization", "programming tips"]
+tags:
+  [
+    "coding",
+    "software development",
+    "clean code",
+    "code organization",
+    "programming tips",
+  ]
 author: Sujal Choudhari
 ---
 
 ## The Art of Clean Code
+
 Ever found yourself lost in a maze of spaghetti code? We've all been there. Code organization is difficult. Understanding how to organize your code effectively can make the difference. Difference between a maintainable project and a nightmare. Worst nightmare. We will explore some fundamental principles of code organization. It will help you write cleaner, more maintainable, better code. And your mama will be proud of you.
 
 ### The Foundation
-Let's begin with the basics. At its heart, good code organization is nothing but modularity, separation of concerns, and consistency. 
 
-Ever played LEGO? Me neither. **Modularity** is like building with LEGO blocks—each piece has a purpose and can be easily combined or replaced. You want your code to be exactly like that. When you write modular code, you're creating self-contained units that can be developed, tested, and modified independently. 
+Let's begin with the basics. At its heart, good code organization is nothing but modularity, separation of concerns, and consistency.
 
-**Separation of concerns** is like keeping your workspace organized. Do you pay taxes or have friends? Me neither. Separation of concerns is like these two things; you don't want to mix them up. The same goes for code. Keep your user interface logic separate from your business logic, and your data processing separate from your storage operations. Learn. Learn from scam sites. Same backend, different frontend. This makes your code cleaner and more manageable—when something breaks, you'll know exactly where to look. 
+Ever played LEGO? Me neither. **Modularity** is like building with LEGO blocks—each piece has a purpose and can be easily combined or replaced. You want your code to be exactly like that. When you write modular code, you're creating self-contained units that can be developed, tested, and modified independently.
 
-**Consistency** might seem obvious, but it's often overlooked. Do you regularly go to college? I do actually. You might have motivation to organize, but sometimes the motivation fades away. *Consistency is key. To the lock of motivation.* To achieve things that are boring, you need consistency. 
+**Separation of concerns** is like keeping your workspace organized. Do you pay taxes or have friends? Me neither. Separation of concerns is like these two things; you don't want to mix them up. The same goes for code. Keep your user interface logic separate from your business logic, and your data processing separate from your storage operations. Learn. Learn from scam sites. Same backend, different frontend. This makes your code cleaner and more manageable—when something breaks, you'll know exactly where to look.
 
-Here is what I do. I use the same naming conventions, the same structure, and the same formatting across my codebase. And even other projects too. It becomes muscle memory. Things automatically happen. Subconsciously. 
+**Consistency** might seem obvious, but it's often overlooked. Do you regularly go to college? I do actually. You might have motivation to organize, but sometimes the motivation fades away. _Consistency is key. To the lock of motivation._ To achieve things that are boring, you need consistency.
 
-Here are some things I do for OOP: I give the `m_` prefix to member variables, `p_` to protected variables, while public ones are `camelCase` and static ones are `UPPER_SNAKE_CASE`. I also add an `_` prefix to variables declared in the function itself.  
+Here is what I do. I use the same naming conventions, the same structure, and the same formatting across my codebase. And even other projects too. It becomes muscle memory. Things automatically happen. Subconsciously.
+
+Here are some things I do for OOP: I give the `m_` prefix to member variables, `p_` to protected variables, while public ones are `camelCase` and static ones are `UPPER_SNAKE_CASE`. I also add an `_` prefix to variables declared in the function itself.
 
 Oops! There are dynamically typed languages too. Here I add a `<type>_` prefix to variables like `float_gender` or `int_name` to make it easier to understand the type of variable.
 
 ### Embracing Modular Programming
+
 Let's get practical. Modular programming isn't just a fancy term—it's a powerful way to structure your code.  
 Here's a simple example in Python that demonstrates this principle:
 
@@ -48,6 +58,7 @@ def main():
 if name == "__main__":
     main()
 ```
+
 Keep unrelated code separate. Now you can reuse the separated code in other projects.  
 Here, by separating our mathematical operations into their own module, we've created code that's easier to maintain, test, and reuse.  
 Do you have a toolbox? Why? Go get one. It's like having a well-organized toolbox where every tool has its place. And broken tools can be replaced.
@@ -73,6 +84,7 @@ Home. Do you have——?
 It's about creating a logical home for every piece of your project. A file is a toolbox. Functions, the tools. Folders are the kitchen, assuming you store tools there. Like a well-organized kitchen, everything has its place, making it easier to find what you need when you need it.
 
 ### Smart Documentation
+
 Here's a counterintuitive tip: **don't document your code too early**. Wait until your code is stable and tested. Why? Because premature documentation often becomes outdated as your code evolves.  
 Instead. Focus on writing self-explanatory code first. When you do document, focus on the why and when, not the what. What part of the code is the code itself. Here's an example of effective documentation:
 
@@ -98,6 +110,6 @@ When you identify reusable components in your code – like authentication syste
 
 ### Wrapping Up
 
-Remember. Good code organization isn't about following rules blindly – it's about making your code more maintainable, scalable, and collaborative. There are no rules in coding. You are literally pressing random buttons, and you make a rock understand what you want. Make your own rules, but get inspiration from existing ones. Experience. Other people have developed these rules over the years. Why not use them then. Start with these principles, adapt them to your needs, and watch your codebase transform from a tangled mess into a well-oiled machine. 
+Remember. Good code organization isn't about following rules blindly – it's about making your code more maintainable, scalable, and collaborative. There are no rules in coding. You are literally pressing random buttons, and you make a rock understand what you want. Make your own rules, but get inspiration from existing ones. Experience. Other people have developed these rules over the years. Why not use them then. Start with these principles, adapt them to your needs, and watch your codebase transform from a tangled mess into a well-oiled machine.
 
 Before going to buy the toolbox, let me know about the style of this post. Tried something new. No GPT. New style. See ya.

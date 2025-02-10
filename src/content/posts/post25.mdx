@@ -11,8 +11,7 @@ author: Sujal Choudhari
 
 Hello, fellow tech enthusiasts! I'm excited to share with you my ongoing journey of building my very own operating system, which I've now named MoldOS. This project has been an incredible learning experience, and I've been documenting my progress through daily devlogs on Twitter. Today, I want to give you a comprehensive update on how far I've come and what I've learned along the way.
 
-Project Goals
--------------
+## Project Goals
 
 When I started this ambitious project, I set a few key goals for myself:
 
@@ -22,8 +21,7 @@ When I started this ambitious project, I set a few key goals for myself:
 
 With these goals in mind and armed with the guide "Building an OS from Nanobyte," I dove headfirst into the world of OS development.
 
-Understanding the Basics: BIOS, Bootloader, and Kernel
-------------------------------------------------------
+## Understanding the Basics: BIOS, Bootloader, and Kernel
 
 Before diving into the achievements, let me briefly explain some fundamental concepts I've learned:
 
@@ -42,8 +40,7 @@ In my case, I created a custom bootloader that the BIOS loads from the first sec
 
 The kernel is the core of the operating system. It manages system resources, handles hardware interactions, and provides essential services to other software. My kernel, initially very basic, grew to include features like memory management, device drivers, and a simple file system.
 
-Early Achievements
-------------------
+## Early Achievements
 
 In the initial stages of the project, which I originally called SmallOS, I hit several important milestones:
 
@@ -54,8 +51,7 @@ In the initial stages of the project, which I originally called SmallOS, I hit s
 
 These early wins were incredibly motivating and set the stage for more complex development.
 
-Switching Gears: Enter MoldOS
------------------------------
+## Switching Gears: Enter MoldOS
 
 As the project evolved, I made some significant changes and additions:
 
@@ -63,27 +59,24 @@ As the project evolved, I made some significant changes and additions:
 2.  **Interrupt Descriptor Table (IDT)**: I successfully implemented the IDT, a crucial step in handling system errors and making the OS more stable and reliable. The IDT is a data structure that associates each interrupt or exception with a handler function. When an interrupt occurs, the CPU uses the IDT to find and execute the appropriate handler.
 3.  **Keyboard Input**: I added functionality to handle keyboard inputs, allowing keypresses to display on the screen. This involved writing a driver for the keyboard controller and setting up the appropriate interrupt handler.
 4.  **Pagination**: I implemented pagination with L1, L2, and L3 caches, further optimizing the system's performance. Pagination allows the OS to use virtual memory, mapping virtual addresses to physical addresses. The multi-level cache system works like this:
-    *   L1 Cache: Smallest and fastest, typically built into the CPU core
-    *   L2 Cache: Larger but slightly slower, often shared between CPU cores
-    *   L3 Cache: Largest but slowest of the three, shared among all coresThis caching system significantly speeds up memory access by keeping frequently used data close to the CPU.
+    - L1 Cache: Smallest and fastest, typically built into the CPU core
+    - L2 Cache: Larger but slightly slower, often shared between CPU cores
+    - L3 Cache: Largest but slowest of the three, shared among all coresThis caching system significantly speeds up memory access by keeping frequently used data close to the CPU.
 5.  **Full File System Support**: This was a major milestone, opening up new possibilities for file management within MoldOS.
 
-Blending Passions: Game Development in MoldOS
----------------------------------------------
+## Blending Passions: Game Development in MoldOS
 
 To keep things interesting and merge my love for game development with OS creation, I've started working on a dungeon crawler game specifically for MoldOS. This project within a project has been incredibly motivating and helps showcase the capabilities of my custom OS.
 
 Developing a game for MoldOS involves writing custom graphics drivers to manipulate the VGA buffer directly. The standard text mode provides a 80x25 character grid, but with some tweaking, I've managed to create a more graphical environment for the game.
 
-Learning and Growth
--------------------
+## Learning and Growth
 
 This journey has been about so much more than just coding. It's taught me the importance of taking on projects that both challenge and inspire. I've gained invaluable insights into system architecture, error handling, user input management, and the intricacies of low-level programming.
 
 Moreover, I've experienced significant personal growth as a developer. The challenges I've faced and overcome have boosted my problem-solving skills and confidence in tackling complex projects.
 
-Looking Ahead
--------------
+## Looking Ahead
 
 As I continue to develop MoldOS, I'm filled with excitement for what's to come. Each new feature and optimization brings me closer to my goal of creating a fully functional, unique operating system. Some areas I'm looking to explore include:
 

@@ -3,8 +3,8 @@
   "version": "3.0.0",
   "license": "MIT",
   "scripts": {
-    "dev": "astro dev",
-    "build": "astro build",
+    "dev": "node preprocess.js && astro dev",
+    "build": "node preprocess.js && astro build",
     "preview": "astro preview",
     "format": "prettier -w ."
   },

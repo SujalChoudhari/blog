@@ -1,3 +1,24 @@
+* {
+  color: #c0c0c0 !important;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+strong,
+b,
+em,
+i {
+  color: #f0f0f0 !important;
+}
+
+strong {
+  text-emphasis: bold !important;
+}
+
 html {
   @apply text-base;
 }
