@@ -9,11 +9,9 @@ social:
   linkedin: https://www.linkedin.com/in/sujalchoudhari
 ---
 
-As a third-year Information Technology student at Dwarkadas J. Sanghvi College of Engineering, 
-
+As a third-year Information Technology student at Dwarkadas J. Sanghvi College of Engineering,
 
 <div align="left">
-
 
 I have over five years of programming experience. My preferred languages are C++, Python, and TypeScript. I have also published books on Amazon and Gumroad. [GitHub](https://github.com/SujalChoudhari)
 

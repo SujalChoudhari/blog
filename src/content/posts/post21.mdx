@@ -11,13 +11,11 @@ author: Sujal Choudhari
 
 Scala is a flexible programming language that uses the Java Virtual Machine (JVM). It combines object-oriented and functional programming paradigms, making it an ideal choice for developers seeking the best of both. Scala enables concurrent programming, making it suitable for high-performance applications.
 
-Getting Started with Scala
---------------------------
+## Getting Started with Scala
 
 To begin using Scala, you have numerous options for configuring your development environment. While Scala supports a web-based IDE, many developers prefer Eclipse for its greater integration and features. Other popular choices are Replit and Visual Studio Code (VSCode). The setup procedure is comparable to Java, and you may use both Java and Scala code in the same project.
 
-Scala Worksheets
-----------------
+## Scala Worksheets
 
 Scala worksheets are a great tool for quick testing and debugging. They show the output directly within ScalaIDE, making it easier to see the results of your code. Here's a simple example:
 
@@ -26,12 +24,10 @@ object Demo {
   println("Hello Scala!")
 }
 ```
-    
 
 Additionally, Scala provides a Read-Eval-Print Loop (REPL) similar to Python and other languages, allowing you to interactively test code snippets.
 
-Variables in Scala
-------------------
+## Variables in Scala
 
 In Scala, you declare variables using `var` and `val`. The `var` keyword defines a mutable variable, while `val` is used for constants, meaning the value cannot be changed after it is assigned.
 
@@ -39,40 +35,37 @@ In Scala, you declare variables using `var` and `val`. The `var` keyword defines
 var i = 9
 var j: Int = 10  // No semicolons required, similar to Python
 val num: Int = 10  // This is like a constant or final variable
-```    
+```
 
 Scala encourages immutability, which means most data should be declared with `val`.
 
-Operators in Scala
-------------------
+## Operators in Scala
 
 Interestingly, operators in Scala are treated as functions. For example, the `+` operator is a method that can be invoked on numbers:
 
-```js    
-8.+(7)  // This is equivalent to 8 + 7
-```    
+```js
+8 + 7; // This is equivalent to 8 + 7
+```
 
 This feature allows for more expressive code, though it might seem unusual at first.
 
-Working with Classes in Scala
------------------------------
+## Working with Classes in Scala
 
 Defining classes in Scala is straightforward. You can create a simple class with a single line:
 
 ```js
 
 case class Student(var rollNo: Int, var name: String = "Sujal", var marks: Int = 10)
-```    
+```
 
 This line not only defines a class but also creates a constructor. Scala also supports constructor overloading and operator overloading, which are not available in Java.
 
 ```js
 var s1: Student = Student(10, name = "SujalC")
-``` 
+```
 
 Creating methods inside the class is also simple:
 
-    
 ```js
 case class Student(var rollNo: Int, var name: String = "Sujal", var marks: Int = 10) {
   def show() = print("hi")
@@ -82,38 +75,31 @@ case class Student(var rollNo: Int, var name: String = "Sujal", var marks: Int =
   def >(s2: Student): Boolean = marks > s2.marks
 }
 ```
-    
 
-Lists and Lambda Expressions
-----------------------------
+## Lists and Lambda Expressions
 
 Scala provides powerful collections like `List` and supports lambda expressions. Here's how you can work with lists:
 
-    
 ```js
 var nums: List[Int] = List(2, 3, 4, 5)
 for (n <- nums) {
   println(n)
 }
 ```
-    
 
 You can use lambda expressions to perform operations on the list:
 
 ```js
 nums.foreach { i: Int => println(i) }
 ```
-    
 
 Scala's `List` is immutable by default, and operations like `reverse` return a new list:
 
-    
 ```js
-nums = nums.reverse()
+nums = nums.reverse();
 ```
 
-Chaining Functions
-------------------
+## Chaining Functions
 
 Scala allows you to chain functions together, creating expressive and concise code:
 
@@ -122,8 +108,7 @@ nums.drop(2).take(2)  // Returns the 3rd and 4th elements
 nums drop 2 take 2    // This also works without dots or parentheses
 ```
 
-Working with Different Data Types
----------------------------------
+## Working with Different Data Types
 
 Scala's `AnyVal` and `AnyRef` types correspond to primitive and reference types in Java. You can create lists containing elements of different types:
 
@@ -131,8 +116,7 @@ Scala's `AnyVal` and `AnyRef` types correspond to primitive and reference types 
 val arr: List[AnyVal] = List(2, 3, true, "Yes!")
 ```
 
-Tuples in Scala
----------------
+## Tuples in Scala
 
 Tuples allow you to group multiple values into a single compound value. Here's an example of how to use them:
 
@@ -142,8 +126,6 @@ val (part1, part2) = students.partition(s => s.marks >= 60)
 
 Tuples are a powerful way to work with grouped data in Scala.
 
-Conclusion
-----------
+## Conclusion
 
 Scala is a sophisticated language that combines functional and object-oriented programming. Its syntax and features, like operator overloading, REPL, and immutable collections, make it an excellent choice for developers seeking to create robust and concurrent applications. Scala's tools and capabilities can boost productivity for Java developers, regardless of experience level.
-
