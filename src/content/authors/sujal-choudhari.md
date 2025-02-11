@@ -9,21 +9,14 @@ social:
   linkedin: https://www.linkedin.com/in/sujalchoudhari
 ---
 
-As a third-year Information Technology student at Dwarkadas J. Sanghvi College of Engineering,
+<div align="justify">
 
-<div align="left">
+Sujal Choudhari is a dedicated Information Technology student at Dwarkadas J. Sanghvi College of Engineering in Mumbai, India. With over five years of programming experience, he has developed a strong proficiency in languages such as C++, Python, and TypeScript. His passion for web and game development is evident through his active contribution of more than 90 open-source projects on GitHub, reflecting his commitment to the developer community.
 
-I have over five years of programming experience. My preferred languages are C++, Python, and TypeScript. I have also published books on Amazon and Gumroad. [GitHub](https://github.com/SujalChoudhari)
+Beyond coding, Sujal has shared his expertise by authoring development books available on Amazon and Gumroad, aiming to empower aspiring programmers. He has also published packages on platforms like pub.dev, npmjs.com, and pypi.org, making his work accessible to developers worldwide.
 
-**Achievements:**
+His dedication and skills have been recognized through several accolades, including victories in the Smart India Hackathon (2023 and 2024) and the 100xEngineers x YourStory GenAI Buildathon.
 
-- Winner in 100xEngineers x YourStory GenAI Buildathon
-- Winner in Smart India Hackathon 2024
-- Winner in Smart India Hackathon 2023
-- Winner in SPIT24 Hackathon by SPIT chapter of Computer Society of India
-- Winner in Hackniche 2.0 Hackathon by DJSCE chapter of Google Developer Student Club
-- First Runner Up in TSECHacks24 Hackathon
-
-For more information, visit my personal website: [sujal.xyz](https://sujal.xyz/)
+Sujal is eager to collaborate with like-minded individuals and teams, continually seeking opportunities to expand his knowledge and contribute to innovative projects. For more information about his work and publications, visit his personal website: [sujal.xyz](https://sujal.xyz/). 
 
 </div>
