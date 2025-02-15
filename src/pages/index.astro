@@ -15,11 +15,6 @@ const currentPosts = sortedPosts.slice(0, config.settings.pagination);
 <Base>
   <section class="section">
     <div class="container">
-      <h1>We build the World brick by brick.</h1>
-      <p class="mb-4 text-2xl">
-        Engineering is not just about solving problems; it's about creating
-        solutions that inspire and transform the world.
-      </p>
       <Posts posts={currentPosts} className="mb-16" />
       <Pagination currentPage={1} totalPages={totalPages} />
     </div>
