@@ -20,7 +20,7 @@ const similarItems = (currentItem: any, allItems: any, id: string) => {
       new Date(b.data.date).getTime() - new Date(a.data.date).getTime(),
   );
 
-  return sortedItems;
+  return sortedItems.slice(0,3);
 };
 
 export default similarItems;
