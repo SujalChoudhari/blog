@@ -1,5 +1,5 @@
 // similer products
-const similarItems = (currentItem: any, allItems: any, slug: string) => {
+const similarItems = (currentItem: any, allItems: any, id: string) => {
   const currentCategories: string[] = (
     currentItem.data?.categories || []
   ).map((c: string) => c.toLowerCase());
@@ -7,7 +7,7 @@ const similarItems = (currentItem: any, allItems: any, slug: string) => {
   // Filter by categories
   const filteredByCategories = allItems.filter((item: any) => {
     if (!item.data?.categories) return false;
-    if (item.slug === slug) return false; // Exclude current item
+    if (item.id === id) return false; // Exclude current item
 
     return item.data.categories.some((category: string) =>
       currentCategories.includes(category.toLowerCase()),
