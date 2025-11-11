@@ -1,0 +1,80 @@
+---
+title: "Diving Head-First: Building a C++ Trading Engine from Scratch (Project BetaTrader)"
+date: 2025-10-15
+description: "A hands-on deep dive into crafting a lock-free FX matching engine in C++—partitioned threads, async persistence, and stress tests hitting 50k orders in seconds. This is Project BetaTrader: my raw engineering quest to demystify high-frequency trading without the Wall Street budget."
+tags: [
+  "cpp",
+  "fintech",
+  "trading-engine",
+  "lock-free",
+  "high-performance",
+  "matching-engine",
+  "async-persistence",
+  "sqlite",
+  "stress-testing",
+  "software-architecture"
+]
+categories: ["deep-dive", "tech", "project"]
+author: "Sujal Choudhari"
+image: "/images/posts/35.jpg"
+---
+# Diving Head-First: Building a C++ Trading Engine from Scratch (Project BetaTrader)
+
+Ever stared at those stock tickers zipping across the screen and wondered, *What kind of beastly software powers that chaos?* Yeah, me too. I've always been hooked on FinTech—especially the adrenaline rush of trading. But I'm not one for just reading theory; I learn by jumping in and getting my hands dirty. So, that's exactly what I did.
+
+Enter **Project BetaTrader**: my from-scratch C++ take on an FX matching engine. Fair warning—this isn't battle-tested for Wall Street. It's a passion project, my way of wrapping my head around the wild world of high-performance finance.
+
+## The Big Headache: Speed *Has* to Be Everything
+
+At the core of any trading system is the **matching engine**—the thing that pairs buyers and sellers in a blink. It needs to be blazing fast and totally impartial. The nightmare I hit early on? Locks. Slapping a mutex on every order? Instant traffic jam. Your engine grinds to a halt.
+
+My fix: **Ditch the locks on the hot path** ⚡. I modeled the `core/trading_core/` around a partitioned single-writer setup. Breaking it down simply:
+
+- No more one giant, bottlenecked beast.
+- Each currency pair (think EUR/USD) gets its own dedicated worker thread.
+- Only *that* thread touches its order book. No sharing, no drama.
+- Incoming commands? They slide in via a lock-free single-producer/single-consumer (SPSC) queue.
+
+Boom—critical matching is lock-free and flies. It sticks to strict **price-time priority** (the golden rule of exchanges) and chews through partial fills like it's nothing.
+
+## Okay, But What About Storing All That Data?
+
+Lightning-fast matching is great, but what if you need to log a trade? Pausing everything to hit the database? That's a recipe for disaster—your whole system stalls.
+
+Here's where I got clever: **Make persistence totally async**.
+
+- The matching thread? It never even glances at the disk.
+- Trade happens? It just queues up a quick "hey, save this" note.
+- A separate **DatabaseWorker** thread grabs those notes and dumps them into SQLite in the background.
+
+The hot path stays pristine and speedy.
+
+## Does It Actually Work? My First Stress Test
+
+Enough yapping—let's see the numbers. I whipped up a little log analyzer to watch the engine sweat under pressure. Spoiler: For a first swing, it *crushed* it.
+
+In a quick 2-second burst, it handled **50,000 new orders**, spitting out **49,139 trades** with *zero* rejects. Average latency for just acknowledging an order? A zippy **0.303 ms**. And full trade latency—from submission to "done deal"? Around **41 ms** (that's 40,924 µs for the nerds).
+
+Quick reality check: This is all on my everyday laptop, sans real-world extras like auth, networking, or data scrubbing that pile on extra lag. But as a core-engine proof-of-concept? I'm grinning ear to ear.
+
+My visualizer tool was the real fun part—it let me peek at the action live:
+
+![Trade Volume Spike](/images/posts/35c.png)  
+
+Then there's the latency breakdown by symbol (in nanoseconds—tiny, right?):
+
+![Latency Breakdown](/images/posts/35b.png) 
+
+And finally, the OHLC price action chart the engine generated:
+
+![OHLC Chart](/images/posts/35a.png) 
+
+## What's Coming Up?
+
+The matching heart is pumping strong, but right now, it's a hermit—only chatting with my unit tests. Time to open the doors.
+
+Next up: Tackling the **gateway**, the front porch where the real world knocks. In my upcoming post, I'll geek out on implementing the **FIX Protocol** (yep, the trading industry's handshake language) for message handling and session magic. The engine's about to go live.
+
+If you're a tinkerer like me, a dev chasing the next challenge, or just curious about the guts of big systems—stick around! Follow for the ride.
+
+All the code's up on GitHub: [SujalChoudhari/BetaTrader](https://github.com/SujalChoudhari/BetaTrader) – a full in-house trading playground, complete with venue logic, gateways, and clients. Dive in!

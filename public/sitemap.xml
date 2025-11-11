@@ -2,7 +2,7 @@
       <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
         <url>
           <loc>https://www.blog.sujal.xyz</loc>
-          <lastmod>2025-08-08T05:25:44.191Z</lastmod>
+          <lastmod>2025-11-11T08:22:56.846Z</lastmod>
           <changefreq>monthly</changefreq>
           <priority>1.0</priority>
         </url>
@@ -225,7 +225,15 @@
 
         <url>
           <loc>https://www.blog.sujal.xyz/posts/post34</loc>
-          <lastmod>2025-03-15T00:00:00.000Z</lastmod>
+          <lastmod>2025-08-08T00:00:00.000Z</lastmod>
+          <changefreq>monthly</changefreq>
+          <priority>0.7</priority>
+        </url>
+      
+
+        <url>
+          <loc>https://www.blog.sujal.xyz/posts/post35</loc>
+          <lastmod>2025-10-15T00:00:00.000Z</lastmod>
           <changefreq>monthly</changefreq>
           <priority>0.7</priority>
         </url>
