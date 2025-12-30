@@ -5,9 +5,19 @@
           <link>https://www.blog.sujal.xyz</link>
           <description>Latest updates from Sujal's blog</description>
           <language>en-us</language>
-          <lastBuildDate>Tue, 11 Nov 2025 08:22:56 GMT</lastBuildDate>
+          <lastBuildDate>Tue, 30 Dec 2025 11:22:56 GMT</lastBuildDate>
           <atom:link href="https://www.blog.sujal.xyz/rss.xml" rel="self" type="application/rss+xml" />
           
+    <item>
+      <title>A Day of Unexpected Messages: My Experience with a Side Project and a Sudden Worry</title>
+      <link>https://www.blog.sujal.xyz/posts/post36</link>
+      <description>A personal story about my open-source file-sharing tool, a suspicious message from a 'recruiter' and 'consultant', and a fake police scare. From excitement to anxiety and back to relief—lessons on internet safety and verifying sources.</description>
+      <pubDate>Tue, 30 Dec 2025 00:00:00 GMT</pubDate>
+      <author>rss@sujal.xyz (Sujal Choudhari)</author>
+      <guid>https://www.blog.sujal.xyz/posts/post36</guid>
+    </item>
+  
+
     <item>
       <title>Diving Head-First: Building a C++ Trading Engine from Scratch (Project BetaTrader)</title>
       <link>https://www.blog.sujal.xyz/posts/post35</link>
