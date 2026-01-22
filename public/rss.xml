@@ -5,9 +5,19 @@
           <link>https://www.blog.sujal.xyz</link>
           <description>Latest updates from Sujal's blog</description>
           <language>en-us</language>
-          <lastBuildDate>Tue, 30 Dec 2025 11:22:56 GMT</lastBuildDate>
+          <lastBuildDate>Thu, 22 Jan 2026 06:17:38 GMT</lastBuildDate>
           <atom:link href="https://www.blog.sujal.xyz/rss.xml" rel="self" type="application/rss+xml" />
           
+    <item>
+      <title>The Machine: Five Years of Total Concentration</title>
+      <link>https://www.blog.sujal.xyz/posts/post37</link>
+      <description>A personal story about spending five years in total concentration, winning hackathons, and the cost of isolation. A journey from being invisible to becoming undeniable, and the decision to reclaim humanity.</description>
+      <pubDate>Thu, 22 Jan 2026 00:00:00 GMT</pubDate>
+      <author>rss@sujal.xyz (Sujal Choudhari)</author>
+      <guid>https://www.blog.sujal.xyz/posts/post37</guid>
+    </item>
+  
+
     <item>
       <title>A Day of Unexpected Messages: My Experience with a Side Project and a Sudden Worry</title>
       <link>https://www.blog.sujal.xyz/posts/post36</link>
