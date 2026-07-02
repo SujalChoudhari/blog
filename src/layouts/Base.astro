@@ -1,175 +1,72 @@
 ---
-import TwSizeIndicator from "@/components/TwSizeIndicator.astro";
 import config from "@/config/config.json";
-import theme from "@/config/theme.json";
-import { plainify } from "@/lib/utils/textConverter";
-import Footer from "@/partials/Footer.astro";
-import Header from "@/partials/Header.astro";
-import "@/styles/main.scss";
-import { AstroFont } from "astro-font";
-import { ClientRouter } from "astro:transitions";
-
-// font families
-const pf = theme.fonts.font_family.primary;
-const sf = theme.fonts.font_family.secondary;
-
-let fontPrimary = pf?.replace(/\+/g, " ").replace(/:[ital,]*[ital@]*[wght@]*[0-9,;]+/gi, "") ?? "";
-let fontSecondary = sf?.replace(/\+/g, " ").replace(/:[ital,]*[ital@]*[wght@]*[0-9,;]+/gi, "") ?? "";
-
-let fontConfig = [];
-
-if (pf?.trim()) {
-  fontConfig.push({
-    src: [],
-    preload: false,
-    display: "swap",
-    name: fontPrimary,
-    fallback: "sans-serif",
-    cssVariable: "font-primary",
-    url: `https://fonts.googleapis.com/css2?family=${pf}&display=swap`,
-  });
-}
-
-if (sf?.trim()) {
-  fontConfig.push({
-    src: [],
-    preload: false,
-    display: "swap",
-    name: fontSecondary,
-    fallback: "sans-serif",
-    cssVariable: "font-secondary",
-    url: `https://fonts.googleapis.com/css2?family=${sf}&display=swap`,
-  });
-}
-
-// types for frontmatters
-export interface Props {
+import Header from "@/layouts/partials/Header.astro";
+import Footer from "@/layouts/partials/Footer.astro";
+interface Props {
   title?: string;
-  meta_title?: string;
   description?: string;
-  image?: string;
-  noindex?: boolean;
-  canonical?: string;
 }
 
-// distructure frontmatters
-const { title, meta_title, description, image, noindex, canonical } =
-  Astro.props;
+const { title = config.site.title, description = "" } = Astro.props;
 ---
 
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
-    <!-- favicon -->
-    <link rel="shortcut icon" href={config.site.favicon} />
-    <!-- theme meta -->
-    <meta name="theme-name" content="bookworm-light-astro" />
-    <meta name="msapplication-TileColor" content="#000000" />
-    <meta
-      name="theme-color"
-      media="(prefers-color-scheme: light)"
-      content="#fff"
-    />
-    <meta
-      name="theme-color"
-      media="(prefers-color-scheme: dark)"
-      content="#000"
-    />
-    <meta name="generator" content={Astro.generator} />
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-
-    <!-- google font css -->
-   {fontConfig.length > 0 && <AstroFont config={fontConfig as any} />}
-
-
-    <!-- responsive meta -->
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, maximum-scale=5"
-    />
-
-    <!-- title -->
-    <title>
-      {plainify(meta_title ? meta_title : title ? title : config.site.title)}
-    </title>
-
-    <!-- canonical url -->
-    {canonical && <link rel="canonical" href={canonical} item-prop="url" />}
-
-    <!-- noindex robots -->
-    {noindex && <meta name="robots" content="noindex,nofollow" />}
-
-    <!-- meta-description -->
-    <meta
-      name="description"
-      content={plainify(
-        description ? description : config.metadata.meta_description,
-      )}
-    />
-
-    <ClientRouter />
-
-    <!-- author from config.json -->
-    <meta name="author" content={config.metadata.meta_author} />
-
-    <!-- og-title -->
-    <meta
-      property="og:title"
-      content={plainify(
-        meta_title ? meta_title : title ? title : config.site.title,
-      )}
-    />
-
-    <!-- og-description -->
-    <meta
-      property="og:description"
-      content={plainify(
-        description ? description : config.metadata.meta_description,
-      )}
-    />
-    <meta property="og:type" content="website" />
-    <meta
-      property="og:url"
-      content={`${config.site.base_url}/${Astro.url.pathname.replace("/", "")}`}
-    />
-
-    <!-- twitter-title -->
-    <meta
-      name="twitter:title"
-      content={plainify(
-        meta_title ? meta_title : title ? title : config.site.title,
-      )}
-    />
-
-    <!-- twitter-description -->
-    <meta
-      name="twitter:description"
-      content={plainify(
-        description ? description : config.metadata.meta_description,
-      )}
-    />
-
-    <!-- og-image -->
-    <meta
-      property="og:image"
-      content={`${config.site.base_url}${
-        image ? image : config.metadata.meta_image
-      }`}
-    />
-
-    <!-- twitter-image -->
-    <meta
-      name="twitter:image"
-      content={`${config.site.base_url}${
-        image ? image : config.metadata.meta_image
-      }`}
-    />
-    <meta name="twitter:card" content="summary_large_image" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title ? `${title} · ${config.site.title}` : config.site.title}</title>
+    {description && <meta name="description" content={description} />}
+    <link rel="canonical" href={Astro.url.href} />
+    <style is:global>
+      :root { color-scheme: light; }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; font-family: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 15px; line-height: 1.6; color: #000; background: #fff; }
+      body { border-top: 4px solid #000; }
+      main { width: 100%; max-width: 760px; margin: 0 auto; padding: 2rem 1rem; }
+      a { color: #000; text-decoration: underline; text-underline-offset: 4px; }
+      a:hover { text-decoration: none; background: #000; color: #fff; }
+      .container { max-width: 760px; margin: 0 auto; padding: 0; }
+      .section { padding-top: 1rem; padding-bottom: 2rem; }
+      h1, h2, h3 { line-height: 1.25; letter-spacing: -0.02em; font-weight: 700; }
+      h1 { font-size: 1.75rem; margin: 0 0 1rem; }
+      h2 { font-size: 1.25rem; margin: 1.5rem 0 0.5rem; }
+      h3 { font-size: 1.1rem; margin: 1.25rem 0 0.5rem; }
+      p { max-width: 75ch; margin-top: 0; margin-bottom: 1.25rem; }
+      pre, code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.9em; }
+      pre { background: #fafafa; padding: 1rem; border: 1px solid #eaeaea; overflow: auto; border-radius: 6px; }
+      blockquote { margin: 1.5rem 0; padding-left: 1rem; border-left: 2px solid #000; color: #333; }
+      ul { padding-left: 1.5rem; margin-top: 0; margin-bottom: 1.25rem; }
+      li { margin-bottom: 0.25rem; }
+      .post-list { list-style: none; padding: 0; margin: 0; border-top: 1px solid #eaeaea; }
+      .post-list-item { padding: 0.75rem 0; border-bottom: 1px solid #eaeaea; display: flex; flex-direction: column; gap: 0.25rem; }
+      @media (min-width: 600px) {
+        .post-list-item { flex-direction: row; align-items: baseline; gap: 1.5rem; }
+      }
+      .post-list-item .meta-line { white-space: nowrap; color: #666; font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+      .post-list-item .title-line a { font-weight: 500; text-decoration: none; }
+      .post-list-item .title-line a:hover { text-decoration: underline; background: transparent; color: #000; }
+      .post-meta { color: #666; font-size: 0.85rem; margin-bottom: 1.5rem; display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+      .tag-list { padding: 0; margin: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+      .tag-list li { display: block; margin: 0; }
+      .tag-list a { text-decoration: none; background: #f4f4f5; color: #000; padding: 0.15rem 0.5rem; font-size: 0.75rem; border-radius: 9999px; font-weight: 500; }
+      .tag-list a:hover { background: #000; color: #fff; text-decoration: none; }
+      .site-header { max-width: 760px; margin: 0 auto; padding: 1.5rem 1rem; border-bottom: 1px solid #eaeaea; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+      .site-title { font-weight: 700; font-size: 1.1rem; text-decoration: none; }
+      .site-title:hover { background: transparent; color: #000; text-decoration: none; }
+      .site-nav { display: flex; gap: 1.25rem; }
+      .site-nav a { text-decoration: none; font-size: 0.9rem; color: #666; }
+      .site-nav a:hover { color: #000; background: transparent; text-decoration: none; }
+      .site-footer { max-width: 760px; margin: 0 auto; padding: 2rem 1rem; color: #666; font-size: 0.85rem; border-top: 1px solid #eaeaea; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+      .site-footer a { color: #666; text-decoration: none; }
+      .site-footer a:hover { color: #000; background: transparent; text-decoration: underline; }
+      .social-icons-simple { display: flex; gap: 1rem; list-style: none; padding: 0; margin: 1rem 0; flex-wrap: wrap; }
+      .content img { display: none !important; } /* Hide all markdown images in posts */
+    </style>
   </head>
   <body>
-    <TwSizeIndicator />
     <Header />
-    <main id="main-content" class="min-h-[60vh]">
+    <main>
       <slot />
     </main>
     <Footer />

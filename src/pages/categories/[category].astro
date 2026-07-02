@@ -27,10 +27,10 @@ const title = humanize(category || "");
 ---
 
 <Base title={title || "Category"}>
-  <div class="section">
+  <div>
     <div class="container">
-      <p class="text-center text-2xl mb-4">Showing Posts From</p>
-      <h1 class="h2 mb-16 text-center text-primary">{title}</h1>
+      <p style="text-align:center;font-size:1.25rem;margin-bottom:1rem">Showing Posts From</p>
+      <h1 style="text-align:center;color:#06c;margin-bottom:1.5rem">{title}</h1>
       <Posts posts={sortedPosts} fluid={false} />
     </div>
   </div>

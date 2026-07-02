@@ -11,21 +11,8 @@ const { Content } = await render(author);
 
 <section class="section">
   <div class="container">
-    <div class="mb-4 text-center md:px-24">
-      {
-        image && (
-          <div class="mb-8">
-            <Image
-              src={image}
-              class="mx-auto rounded-lg"
-              height={150}
-              width={150}
-              alt={title}
-            />
-          </div>
-        )
-      }
-      <h1 set:html={markdownify(title)} class="page-heading h2 mb-8" />
+    <div>
+      <h1 set:html={markdownify(title)} />
 
       <Social source={social} className="social-icons-simple" />
       <div class="content">
