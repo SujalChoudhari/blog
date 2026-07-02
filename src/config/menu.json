@@ -2,19 +2,7 @@
   "main": [
     {
       "name": "Home",
-      "url": "/"
-    },
-    {
-      "name": "Author",
-      "url": "/authors/sujal-choudhari"
-    },
-    {
-      "name": "Categories",
-      "url": "/categories"
-    },
-    {
-      "name": "Tags",
-      "url": "/tags"
+      "url": "https://sujal.xyz"
     }
   ],
   "footer": []

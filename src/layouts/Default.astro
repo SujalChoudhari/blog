@@ -7,9 +7,9 @@ const { title } = data.data;
 const { Content } = await render(data);
 ---
 
-<section class="section">
+<section>
   <div class="container">
-    <h1 set:html={markdownify(title)} class="h2 page-heading" />
+    <h1 set:html={markdownify(title)} style="font-size:1.8rem;margin:0.2rem 0 0.4rem;" />
     <div class="content">
       <Content />
     </div>
