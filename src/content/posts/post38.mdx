@@ -1,29 +1,140 @@
 ---
 title: "Ship the IP, Skip the Rabbit Hole"
-date: "2026-08-01"
-description: "A pragmatic infra war story about choosing IP-only over CNAME, HTTPS, and Traefik when good-enough beats over-engineered correctness."
+date: 2026-08-01
+description: "A pragmatic infra war story about choosing IP-only over CNAME, HTTPS, and Traefik when good-enough beats over-engineered correctness. Sometimes the fastest deploy is the one you already have."
 tags: ["infra", "systems", "devops", "pragmatism"]
 categories: ["writing"]
 image: "/images/posts/ship-ip.jpg"
-author: "Sujal Choudhari"
+author: Sujal Choudhari
 ---
 
-It was 2 AM, and I had just finished tuning a custom CUDA kernel benchmark dashboard for a fresh LLM fine-tuning run. The code was lean, the metrics were crisp, and all that remained was getting the web view into the hands of the team before morning.
+It was 2 AM, and I had just finished tuning a custom CUDA kernel benchmark dashboard for a fresh LLM fine-tuning run. The code was lean, the metrics were crisp, and all that remained was getting the web view into the hands of the team before morning standup.
 
 Naturally, the classic software engineering brain rot kicked in.
 
-*"I should set up a sub-domain. Configure a Cloudflare CNAME. Spin up Traefik. Wire up Let's Encrypt for automatic TLS cert generation. Write a systemd unit file."*
+*"I should set up a sub-domain. Configure a Cloudflare CNAME. Spin up Traefik. Wire up Let's Encrypt for automatic TLS cert generation. Write a systemd unit file. Maybe add basic auth while I'm at it."*
 
 Two hours later, I was three tabs deep into Traefik v3 migration docs, debugging an ACME HTTP-01 challenge failure because of a botched DNS record propagation delay.
 
 I paused. *What am I doing?*
 
-This was an internal telemetry dashboard for three engineers. No auth passwords, no sensitive payload, no public traffic. The machine already had a static IPv4 address.
+---
 
-I killed the Traefik container, ran `nohup ./bench_server --port 8080 &`, verified `curl http://159.65.x.x:8080`, and pasted the raw URL in Slack. Total elapsed time: 45 seconds. The team got their data, the decisions were made, and the model training kept rolling.
+## The Setup
 
-Coming from a C++/Rust and systems background, I’m obsessed with minimizing overhead. Yet in DevOps, we constantly pay tax on abstractions we don't actually need today.
+Here's the context. I was running a fine-tuning job on a rented GPU box — a bare-metal server with a static IPv4 address. The training script spat out JSON metrics every epoch, and I had a tiny Python Flask app that served them as a live chart. Nothing fancy. Maybe 200 lines of code total.
 
-Clean HTTPS endpoints with pretty CNAMEs are essential for production user apps. But when you’re building internal tooling, raw prototypes, or quick status nodes, **ship the IP**. 
+Three people needed to see it: me, my teammate, and our advisor. All of us were on the same internal Slack channel. None of us cared about a pretty URL. None of us would remember `bench.internal.sujal.xyz` any faster than `159.65.x.x:8080`.
 
-Skip the rabbit hole. Perfect is the enemy of shipped.
+But my brain didn't think that way at 2 AM. My brain thought: *"A real engineer would do this properly."*
+
+So I did what any self-respecting systems dev would do. I opened Cloudflare, created a CNAME record, pointed it at the server, and then realized I needed HTTPS for the browser to stop complaining. That meant a reverse proxy. That meant Traefik.
+
+## The Rabbit Hole
+
+Traefik is a brilliant piece of software. I mean that genuinely. For production workloads with dynamic service discovery across Docker Swarm or Kubernetes, it is an absolute gift.
+
+For a three-person internal dashboard on a throwaway GPU box? It's a bazooka aimed at a mosquito.
+
+But I was already committed. I pulled the Traefik Docker image, wrote a `docker-compose.yml` with the ACME Let's Encrypt configuration, set up the HTTP-01 challenge, and waited.
+
+```
+time="2026-07-31T20:45:12Z" level=error msg="Unable to obtain ACME certificate for domain \"bench.internal.sujal.xyz\""
+```
+
+The CNAME hadn't propagated yet. Cloudflare's proxy was intercepting the challenge. I toggled the proxy to DNS-only. Waited. Still failing. Turns out the subdomain was pointing to the wrong A record because I fat-fingered the IP address in the dashboard.
+
+Fixed it. Waited another 10 minutes for propagation. The cert finally issued.
+
+Then the Flask app wouldn't start because Traefik was already binding port 80. I had to configure the internal routing, add labels to the Docker container, and map the service.
+
+I checked the clock. **4:17 AM.**
+
+I had spent over two hours setting up infrastructure for a dashboard that needed to exist for maybe 72 hours.
+
+## The Moment of Clarity
+
+I stared at the terminal. The Traefik logs were scrolling happily. The TLS cert was valid. The CNAME resolved. Everything was *technically correct*.
+
+And I thought about my C++ days. When I was building low-level systems — compilers, matching engines, custom allocators — the mantra was always the same: **measure, don't assume.** Profile before you optimize. Don't add a layer of abstraction until the complexity demands it.
+
+Somewhere between systems programming and DevOps, I had forgotten that lesson.
+
+I killed the Traefik container. Stopped the Docker Compose stack. Ran one command:
+
+```bash
+nohup python3 bench_server.py --host 0.0.0.0 --port 8080 &
+```
+
+Verified it:
+
+```bash
+curl http://159.65.x.x:8080/metrics
+```
+
+JSON came back. Charts loaded in the browser. I pasted the raw IP URL into Slack with a one-liner: *"Dashboard is live, bookmark this."*
+
+Total elapsed time for the working solution: **45 seconds.**
+
+---
+
+## Why We Over-Engineer
+
+I've thought a lot about why this happens. Not just to me — to every developer I've worked with on infra.
+
+**We confuse professionalism with ceremony.** Setting up Traefik, writing Terraform modules, configuring Nginx with proper SSL termination — these feel like *real work*. Pasting a raw IP in Slack feels sloppy. We're trained to believe that production-grade tooling is always the right answer. But not every problem is a production problem.
+
+**We optimize for a future that may never arrive.** *"What if this dashboard needs to be public later?"* What if it does? Then I'll spend 30 minutes setting up the CNAME at that point. The cost of deferring is near-zero. The cost of premature infrastructure is hours of my life at 2 AM.
+
+**We treat internal tools like external products.** Internal tooling has a different SLA. It has a different audience. It has a different lifespan. A benchmark dashboard that exists for three days does not need the same infrastructure as a customer-facing API.
+
+## The Decision Framework
+
+After that night, I started asking myself three questions before touching any infra:
+
+**1. Who is the audience?**
+If it's fewer than 10 people, and they're all engineers, and they're all on Slack — just ship the IP. They can handle `http://` in their browser bar. They won't file a security audit because the padlock icon is missing.
+
+**2. What is the lifespan?**
+If the thing is going to exist for less than a week, it doesn't need a domain name. It doesn't need TLS. It doesn't need a reverse proxy. It needs to work, and it needs to work *now*.
+
+**3. What's the blast radius of getting it wrong?**
+An internal telemetry dashboard serving read-only JSON to three trusted engineers? Zero blast radius. No auth, no passwords, no sensitive PII, no public traffic. The worst case is someone port-scans the IP and sees a training loss curve. I can live with that.
+
+If any of those answers point to "small, short, safe" — I ship the IP and move on.
+
+## When Correctness Matters
+
+I want to be clear: I'm not advocating for sloppy infrastructure everywhere.
+
+When I built my email system replacement from scratch, HTTPS was non-negotiable. That was a public-facing system handling user data. When I designed the matching engine for BetaTrader, thread safety wasn't optional — the entire architecture depended on partitioned single-writer guarantees.
+
+Production systems deserve production infrastructure. User-facing services need TLS, proper DNS, health checks, monitoring, and all the ceremony.
+
+But **internal dev tooling is not production.** Conflating the two is how you end up spending your best engineering hours on plumbing that nobody will remember in a week.
+
+## The Broader Lesson
+
+This isn't really about Traefik or CNAME records. It's about a mindset.
+
+In systems programming, we talk about **premature optimization** as the root of all evil. In DevOps, the equivalent is **premature infrastructure.** Building the deployment pipeline before you've validated the thing being deployed. Writing the Helm chart before the Docker image is stable. Configuring the monitoring stack before you know what metrics matter.
+
+The best infrastructure decision I've made this year wasn't a clever Kubernetes config or a well-tuned Terraform module. It was typing `nohup ./server &` and going to bed.
+
+Good-enough ships. Perfect sits in a Traefik debug log at 4 AM.
+
+---
+
+## The Checklist I Keep Now
+
+For anyone who's been bitten by the same bug, here's my quick gut-check:
+
+- **Is this internal?** Ship the IP.
+- **Will it live less than a week?** Ship the IP.
+- **Are fewer than 10 people using it?** Ship the IP.
+- **Does it handle sensitive data?** Okay, set up TLS. But *only* TLS. You still probably don't need Traefik.
+- **Is it going to be user-facing?** Now do the ceremony. CNAME, HTTPS, reverse proxy, the works.
+
+The goal isn't to avoid doing things right. It's to avoid doing things right *at the wrong time.*
+
+Ship the IP. Skip the rabbit hole. Sleep before standup.
