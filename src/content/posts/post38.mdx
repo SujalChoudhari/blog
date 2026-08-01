@@ -1,0 +1,29 @@
+---
+title: "Ship the IP, Skip the Rabbit Hole"
+date: "2026-08-01"
+description: "A pragmatic infra war story about choosing IP-only over CNAME, HTTPS, and Traefik when good-enough beats over-engineered correctness."
+tags: ["infra", "systems", "devops", "pragmatism"]
+categories: ["writing"]
+image: "/images/posts/ship-ip.jpg"
+author: "Sujal Choudhari"
+---
+
+It was 2 AM, and I had just finished tuning a custom CUDA kernel benchmark dashboard for a fresh LLM fine-tuning run. The code was lean, the metrics were crisp, and all that remained was getting the web view into the hands of the team before morning.
+
+Naturally, the classic software engineering brain rot kicked in.
+
+*"I should set up a sub-domain. Configure a Cloudflare CNAME. Spin up Traefik. Wire up Let's Encrypt for automatic TLS cert generation. Write a systemd unit file."*
+
+Two hours later, I was three tabs deep into Traefik v3 migration docs, debugging an ACME HTTP-01 challenge failure because of a botched DNS record propagation delay.
+
+I paused. *What am I doing?*
+
+This was an internal telemetry dashboard for three engineers. No auth passwords, no sensitive payload, no public traffic. The machine already had a static IPv4 address.
+
+I killed the Traefik container, ran `nohup ./bench_server --port 8080 &`, verified `curl http://159.65.x.x:8080`, and pasted the raw URL in Slack. Total elapsed time: 45 seconds. The team got their data, the decisions were made, and the model training kept rolling.
+
+Coming from a C++/Rust and systems background, I’m obsessed with minimizing overhead. Yet in DevOps, we constantly pay tax on abstractions we don't actually need today.
+
+Clean HTTPS endpoints with pretty CNAMEs are essential for production user apps. But when you’re building internal tooling, raw prototypes, or quick status nodes, **ship the IP**. 
+
+Skip the rabbit hole. Perfect is the enemy of shipped.
