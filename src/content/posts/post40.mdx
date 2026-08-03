@@ -1,0 +1,127 @@
+---
+title: "Why I'm Building bxios: REST Over WebSocket"
+date: 2026-08-03
+description: "Why high-frequency HTTP gets chatty and wasteful, and how bxios bridges axios-style REST APIs with binary MessagePack over a single WebSocket connection."
+tags: ["javascript", "websocket", "rest", "node", "api"]
+categories: ["Engineering"]
+image: "/images/posts/server_room.jpg"
+author: Sujal Choudhari
+---
+
+If you build real-time dashboards, microservice nodes, or high-frequency telemetry tools, you quickly run into a familiar friction point: standard HTTP is chatty.
+
+Every time a client makes a REST request, it goes through the usual routine. Headers get serialized, TCP connections get negotiated or reused with keep-alive overhead, TLS handshakes execute, and text-based JSON payloads get pushed over the wire. When an app fires dozens or hundreds of small REST calls per minute, that protocol overhead adds up fast.
+
+The typical alternative is switching to raw WebSockets. But raw WebSockets give you a plain message pipe. You lose HTTP verbs (`GET`, `POST`, `PUT`, `DELETE`), URL routing, status codes, and request-response correlation. Suddenly you are writing custom JSON wrappers with manually tracked message IDs just to figure out which server response belongs to which client request.
+
+That is why I am building bxios: an open-source JavaScript and TypeScript library designed to run REST requests over a single long-lived WebSocket connection using binary MessagePack.
+
+---
+
+## The Case Against Chatty HTTP for Real-Time Apps
+
+Traditional REST over HTTP works great for standard CRUD applications. If a user clicks a button once every few seconds to save a profile or fetch a page, opening an HTTP connection and sending JSON headers is completely fine.
+
+Problems start when your access pattern changes. Consider these common setups:
+
+1. Real-time monitoring dashboards requesting telemetry updates, status updates, or metric logs every few hundred milliseconds.
+2. Browser-to-node streaming components where small control commands and query frames are pushed back and forth constantly.
+3. Microservice meshes and internal tools that execute frequent request-reply calls between services.
+
+With standard `fetch` or `axios` calls over HTTP/1.1 or HTTP/2, every single request carries redundant HTTP header fields like user agents, accept headers, cookies, and authorization tokens. Even with compression and header table compression, you are sending raw text keys over TCP sockets for every small payload.
+
+Furthermore, HTTP request-response framing requires managing connection pools, handling connection limits per domain, and dealing with head-of-line blocking or stream limits.
+
+WebSockets solve the connection overhead issue by establishing a single long-lived TCP socket during the initial upgrade handshake. Once open, data flows in both directions with minimal framing overhead, requiring just a few bytes per frame instead of hundreds of bytes of HTTP headers.
+
+However, raw WebSockets lack semantics. A WebSocket frame is just binary or text data. There is no built-in concept of a URL path, a method, a 200 OK vs a 404 Not Found response, or an async callback waiting for a specific payload.
+
+---
+
+## What is bxios?
+
+The goal of `SujalChoudhari/bxios` is to combine the ergonomic API of `axios` with the transport efficiency of WebSockets and binary serialization.
+
+The repository is structured into two main parts:
+
+### 1. bxios (The Client)
+`bxios` is an axios-compatible drop-in REST client for JavaScript and TypeScript. Instead of making individual HTTP calls via `fetch` or `XMLHttpRequest`, `bxios` routes requests through a single persistent WebSocket connection.
+
+From the developer's perspective, the code looks like standard axios:
+
+```typescript
+import { bxios } from 'bxios';
+
+// Make calls just like standard axios, but over a WebSocket tunnel
+const response = await bxios.get('/api/v1/metrics/cpu', {
+  params: { detailed: true }
+});
+
+console.log(response.data);
+```
+
+Under the hood, `bxios` serializes the request path, parameters, headers, and body into a binary MessagePack frame and transmits it over the established WebSocket pipe. When the server responds, `bxios` decodes the binary frame and resolves the exact Promise associated with that request.
+
+### 2. bxios-server (The Server Framework)
+To process REST requests sent over a WebSocket tunnel, the server side needs a handler that understands how to parse frame headers and route requests to controller endpoints.
+
+`bxios-server` is built on top of `uWebSockets.js` for maximum I/O throughput, with a fallback driver for `ws` (Node.js native WebSockets). It acts like a FastAPI-style or Express-style drop-in framework tailored for WebSocket-tunneled REST routing.
+
+```typescript
+import { BxiosServer } from 'bxios-server';
+
+const app = new BxiosServer({ driver: 'uwebsockets' });
+
+app.get('/api/v1/metrics/cpu', (req, res) => {
+  res.json({ usage: 42.5, coreCount: 8 });
+});
+
+app.listen(8080);
+```
+
+---
+
+## Wire Format and Internals
+
+To make REST over WebSocket fast, reliable, and predictable, bxios relies on three core internal mechanisms:
+
+### 1. Binary MessagePack Frame Encoding
+JSON is readable, but parsing text strings and escaping characters on every frame wastes CPU cycles and bandwidth. `bxios` uses MessagePack frame encoding for all requests and responses over the wire. MessagePack packs integers, strings, arrays, and objects into compact binary formats. A JSON payload that takes 150 bytes in plain text often shrinks down to under 80 bytes in MessagePack, while encoding and decoding speeds increase noticeably.
+
+### 2. The PendingMap Correlation Engine
+WebSocket messages are inherently asynchronous and non-blocking. When a client sends frame A and then frame B over the same socket, the server might finish processing frame B before frame A and send the response for frame B first.
+
+Without a correlation layer, the client would have no way to match incoming response frames with the original async promises.
+
+`bxios` implements a lightweight correlation engine centered around an internal structure called `PendingMap`. Every outgoing request frame receives a unique frame ID. When the request is sent, `bxios` creates a Promise, registers its `resolve` and `reject` handlers in `PendingMap` alongside the frame ID, and sets an optional timeout.
+
+When a binary frame arrives from the server, `bxios` reads the frame header, extracts the correlation ID, pulls the corresponding promise handlers from `PendingMap`, and resolves the promise with the decoded body and status code.
+
+### 3. Isomorphic Connection Manager
+Network connections drop, servers restart, and mobile clients switch networks. An isomorphic connection manager inside `bxios` monitors socket state across browser and Node.js environments. If the underlying WebSocket drops, the connection manager triggers auto-reconnect routines with configurable retry backoff strategies, while queuing or rejecting pending frames based on configuration.
+
+---
+
+## Current Status and Where It Stands
+
+`SujalChoudhari/bxios` is currently in active development on GitHub.
+
+Milestone 0 is officially complete. Two fundamental foundational PRs are merged into main:
+
+- **PR #14 (MessagePack Frame Codec & FrameType Specs)**: Establishes the binary serialization rules, frame structures, header definitions, and frame type identifiers for request, response, error, and ping/pong control frames.
+- **PR #15 (Universal IDriver Abstraction Layer)**: Defines the transport agnostic driver interface (`IDriver`), allowing `bxios` and `bxios-server` to run on top of `uWebSockets.js`, standard browser `WebSocket`, or `ws` without tying core logic to any single engine.
+
+Currently, 11 out of 13 issues remain open on the project issue tracker. The active work items on the board cover:
+
+- Authentication handshake protocols and token propagation over persistent connections
+- Backpressure management and socket drain handling
+- Multiplexed streaming frames
+- Zod schema validation middleware for request/response payloads
+- Decorator-based router for `bxios-server`
+- Complete axios-compatible method suite (`post`, `put`, `patch`, `delete`, `head`, `options`) and interceptor pipelines
+- Production-grade connection manager and `PendingMap` edge case hardening
+- Alternative server driver implementations
+- End-to-end test suite and performance benchmark suite
+- Documentation site and README guides
+
+Building `bxios` comes down to a simple goal: keeping the clean, familiar REST DX developers already know while getting the raw transport performance and low latency of WebSockets.
