@@ -1,0 +1,113 @@
+---
+title: "Every PR Needs a Diagram"
+date: 2026-08-04
+description: "Why every pull request needs an HLD, LLD, class diagram, sequence diagram, and real test output before hitting main."
+tags: ["engineering", "code-review", "diagrams", "architecture", "process"]
+categories: ["Engineering"]
+image: "/images/posts/work_room.jpg"
+author: Sujal Choudhari
+---
+
+I have one rule across all my open-source and internal software projects: no pull request gets merged into main without four specific diagrams and real local test output embedded in the description.
+
+If a PR lacks a high-level design diagram, a low-level design diagram, a class or interface diagram, a sequence diagram, or terminal logs proving local execution, it stays blocked. No exceptions.
+
+Some developers find this strict. They think a 50-line bug fix or a small refactor only needs a two-sentence summary and a green CI badge. But text summaries lie. Or, at best, they gloss over details. A written description lets you hand-wave away race conditions, circular dependencies, and edge cases. A diagram forces you to draw every connection and trace every sequence.
+
+When you run projects as a lead reviewing code from agents or other engineers, your main job is not typing out syntax. It is system design, contract enforcement, and review discipline. Enforcing diagrams turns code review from a guessing game into a fast, deterministic check.
+
+---
+
+## Why Text Summaries Fail Code Reviews
+
+When an engineer or an agent opens a pull request, the description usually says something like:
+
+> "Refactored the WebSocket frame parser to handle reconnection automatically and clean up stale request callbacks."
+
+That sounds clear. But it tells you nothing about how the components actually interact under load. 
+
+- Did the socket transport layer acquire a direct dependency on the request router? 
+- What happens to pending callbacks when the socket drops mid-flight? 
+- Does the reconnect handler re-initialize buffers before or after opening the new socket connection?
+
+You cannot answer those questions from a paragraph of prose. To find out, you have to open the diff, jump between five files, trace function calls in your head, and hope you did not miss a subtle async timing issue.
+
+Diagrams remove the guesswork. When the author has to draw the components and trace the execution path visually, architectural flaws jump out immediately.
+
+---
+
+## The Four Mandatory Diagrams
+
+Every PR on my projects includes four diagrams written directly in Mermaid syntax inside the Markdown description. Each diagram serves a distinct purpose and catches a different class of bugs.
+
+### 1. High-Level Design (HLD)
+The HLD shows system boundaries, external services, network transport layers, and data sources. 
+
+It answers: *Where does this change fit in the overall system?*
+
+When building **bxios**, my REST-over-WebSocket JavaScript library, the HLD keeps a clear line between the client application interface, the binary MessagePack encoder, the WebSocket connection manager, and the remote server endpoint. If a PR tries to push server routing logic into the client-side transport layer, the HLD highlights the boundary breach before anyone looks at the code diff.
+
+### 2. Low-Level Design (LLD)
+The LLD shows internal module layout, file structures, state stores, and error-handling paths.
+
+It answers: *How are the internal pieces organized?*
+
+This catches bad abstractions and creeping complexity early. If a small feature addition requires adding three intermediate utility modules and a global event bus, the LLD makes that over-engineering instantly visible.
+
+### 3. Class and Interface Diagram
+The class diagram shows object structures, interface contracts, method signatures, and structural dependencies.
+
+It answers: *What are the static code relationships?*
+
+This is where you spot circular dependencies and leaky abstractions. During bxios development, an early PR attempted to let the low-level socket transport invoke methods on the high-level request manager directly. The class diagram made the cyclic dependency impossible to hide. We fixed it immediately by introducing a clean event emitter interface instead.
+
+### 4. Sequence Diagram
+The sequence diagram shows time order, async messages, payload flows, timeouts, and teardowns.
+
+It answers: *What happens step-by-step during execution?*
+
+Sequence diagrams are the ultimate filter for race conditions. On one occasion, a PR added an auto-reconnect feature to bxios. The written summary claimed everything was handled. But looking at the sequence diagram revealed a glaring flaw: incoming WebSocket frames received during a socket reconnect attempt were dropped because the frame buffer queue was being initialized AFTER the connection opened, not BEFORE. The sequence diagram caught an async timing bug that unit tests missed.
+
+---
+
+## Real Local Test and Build Output Is Mandatory
+
+Diagrams prove that the design is sound. But you still need proof that the code actually builds and passes tests right now.
+
+A green CI pipeline is good, but waiting 10 minutes for remote GitHub Actions to run on every tiny iteration is slow. More importantly, relying solely on CI encourages bad habits like pushing untested code to see if the remote runner passes.
+
+My rule requires pasting raw terminal output directly into the PR description:
+
+```bash
+$ pnpm build
+PASS: Built in 420ms
+
+$ pnpm test
+PASS: test/request.test.ts (14 tests passed)
+PASS: test/websocket.test.ts (9 tests passed)
+PASS: test/messagepack.test.ts (6 tests passed)
+
+Test Files  3 passed (3)
+     Tests  29 passed (29)
+  Start at  14:22:01
+  Duration  1.12s
+```
+
+Pasting local execution logs proves three things:
+1. The developer or agent ran the code locally before opening the PR.
+2. Type checking (`tsc --noEmit`) completed without silent errors.
+3. The test suite ran against the exact commit submitted.
+
+It takes five seconds to copy terminal output into a Markdown code block, but it eliminates an entire class of "forgot to export the new module" or "broken import path" PRs.
+
+---
+
+## Fast Reviews and Better Systems
+
+Requiring four diagrams and terminal logs might sound like extra friction. In practice, it makes development significantly faster.
+
+When I review a PR, I do not want to spend 30 minutes untangling a complex diff. I open the PR, check the test output to verify execution, review the HLD and LLD for clean architecture, inspect the class diagram for proper coupling, and walk through the sequence diagram for timing issues.
+
+If the diagrams make sense and the test logs are clean, reading the code diff takes under three minutes. I click merge with high confidence.
+
+Code is an implementation detail. Design, structure, and empirical proof are what keep a project maintainable over time. If your PR cannot show how it works in four diagrams and a test log, it is not ready for main.
