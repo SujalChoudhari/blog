@@ -1,0 +1,74 @@
+---
+title: "The Novel Was a Game Before It Was a Book"
+date: 2026-08-05
+description: "How Samhara's Daughter began as a 3D game world experiment and evolved into a novel, carrying systems thinking and worldbuilding across media."
+tags: ["writing", "gamedev", "system-design", "worldbuilding", "books"]
+categories: ["Writing"]
+image: "/images/posts/drama_mask.jpg"
+author: Sujal Choudhari
+---
+
+Before Samhara's Daughter was a draft on my screen or a collection of written chapters, it existed as a directory of 3D assets, scene files, and C# scripts in a game engine.
+
+I spend a large portion of my time building software, writing backend services, and working with game engines like Unity and Godot. When I set out to construct the world that eventually became Samhara's Daughter, my default instinct was not to open a text editor and write prose. My default instinct was to open an engine, set up a 3D scene graph, block out terrain with graybox meshes, and write code to control how light, distance, and collision behaved in that space.
+
+For months, the project was an interactive world prototype. It had camera matrices, custom shaders for environmental fog, rigidbodies, and spatial triggers. Yet, as the project grew, the core of what I was building began to pull away from game mechanics and lean heavily toward story.
+
+Deciding to shift the project from a 3D game build into a written novel was not a failure of the original build. It was a recognition that different media serve different purposes. The process of transitioning from code and 3D scenes to written prose taught me how game design tools feed directly into fiction, what changes when you drop the game loop, and why worldbuilding created in an engine remains permanent even when the engine executable is set aside.
+
+---
+
+## From Scene Graph to Paragraphs: What Changed in the Medium
+
+In a 3D game engine, a world exists as a deterministic spatial simulation. Every object requires explicit geometry, collision bounds, material properties, and execution logic. If a character walks through a ruined archway, the engine evaluates vertex transformations, lighting calculations, character controller physics, and occlusion culling.
+
+When you build a world as a game, your primary constraint is interactivity. Every space you design must justify itself to the player. If you place a grand tower on a hillside, the player expects to walk up to it, find an entrance, interact with objects, and experience a loop of exploration, challenge, or reward. If a room has no gameplay function, it feels like empty noise to a player holding a controller.
+
+When I shifted the project into a novel, the primary constraint changed completely.
+
+Text does not require rasterizing pixels or managing frame budgets. Instead, prose demands interiority, emotional weight, character motive, and narrative momentum. In the 3D prototype, a heavy stone door was a mesh collider tied to an interaction script that checked whether an inventory key existed. In the novel, that same door became a focal point of narrative tension, carrying history, physical weight, and atmospheric dread.
+
+The game required constant mechanical feedback. The novel required thematic coherence. Dropping the game engine meant I no longer had to spend hours tuning camera smoothing algorithms, debugging mesh clipping, or writing pathfinding logic for non-player characters. I could focus entirely on voice, character perception, and story progression.
+
+---
+
+## What Stayed: Systems Thinking in Worldbuilding
+
+Although the executable game build was retired, the work done inside the engine did not go to waste. In fact, it formed the foundational structure of the entire book.
+
+Building a world inside a 3D engine forces a level of spatial and systemic discipline that standard writing outlines rarely match. When you place mountain ranges, rivers, fortresses, and settlements onto a 3D grid, you cannot hand-wave spatial relationships. You have to answer concrete questions:
+
+- How long does it take to travel from the coastal outpost to the highland fortress?
+- Where do the sightlines break across the canyon wall?
+- How does the architecture reflect the local stone and environmental weathering?
+- What are the physical bottlenecks that dictate trade, defense, and military movement?
+
+While building the 3D scenes for Samhara's Daughter, I mapped out terrain elevation, architectural styles, and light angles across different times of day. I wrote small procedural tools to test how structures fitted together along cliff edges and how paths naturally carved through valley passes.
+
+When I sat down to write the novel, I did not have to guess what a character saw when looking out from a balcony or how long a journey across a district would take. I had already walked those distances in a viewport. I knew the geometry of the rooms, the placement of courtyard columns, and the structural layout of the fortresses because they had been built to scale in 3D space.
+
+Systems thinking carried over as well. In game development, state management is everything. You track player inventory, health values, faction reputation indices, and environmental flags. Writing a novel involves the exact same state management principles. Characters carry physical items, knowledge states, injuries, and shifting motivations. The discipline of keeping a game state consistent made it natural to track narrative variables, ensuring that character choices had logical consequences rooted in the established rules of the world.
+
+---
+
+## Why Abandoning the Prototype Was Not Abandoning the Story
+
+There is a common mindset among software engineers and game creators that if a code repository or engine prototype is not shipped as a finished software product, the effort was lost. We are trained to measure success by compiled binaries, public releases, and active user bases.
+
+That view misses how creative tools actually work.
+
+The 3D game prototype for Samhara's Daughter was an exploratory medium. It was a scratchpad built with meshes and scripts instead of ink. Building the world visually allowed me to discover its culture, scale, and atmosphere far more concretely than starting with a blank text document would have allowed.
+
+Abandoning the game prototype was simply a choice of format. The game form demanded asset pipelines, user interface design, playtesting cycles, and engine optimization. Those tasks were absorbing time and energy away from the core narrative. The story of Samhara's Daughter did not need a skill tree or a combat loop to be compelling. It needed depth, pacing, and clear character perspective.
+
+By stepping away from the game engine and committing to the book format, the story retained all the spatial realism and systemic depth gained during the 3D prototyping phase, while gaining the freedom and focus that only prose can provide.
+
+---
+
+## The Intersection of Systems and Narrative
+
+My background spans C++, Python, backend architecture, and game engine development alongside writing books. Working across these disciplines has shown me that code and fiction are not as distant as they might seem. Both rely on abstraction, structural consistency, and clear rules.
+
+A game engine uses systems to render a virtual world and handle user input. A novel uses language to construct a mental world inside the reader's mind. Starting Samhara's Daughter as a 3D game experiment provided the blueprint; writing it as a book gave it its voice.
+
+Building a world as a game before writing it as a book remains one of the most effective creative decisions I have made. It proved that changing the final output medium does not erase the underlying system, and that sometimes the best way to plan a novel is to build its world in 3D first.
