@@ -68,7 +68,7 @@ function initializeService(config: UserConfig) {
 
 In C++, strict type checking prevents even more dangerous failures. If you try to pass a raw pointer where a unique ownership smart pointer is required, C++ refuses to compile. The compiler refuses implicit conversions that could lead to double-free errors or dangling memory references.
 
-By rejecting invalid operations early, the compiler turns what would have been a silent runtime corruption into a immediate build error.
+By rejecting invalid operations early, the compiler turns what would have been a silent runtime corruption into an immediate build error.
 
 ---
 
