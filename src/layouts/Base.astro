@@ -7,7 +7,9 @@ interface Props {
   description?: string;
 }
 
-const { title = config.site.title, description = "" } = Astro.props;
+const { title = config.site.title, description = config.metadata.meta_description } = Astro.props;
+const canonicalUrl = Astro.url.href;
+const socialImage = new URL(config.metadata.meta_image, config.site.base_url).href;
 ---
 
 <!DOCTYPE html>
@@ -16,8 +18,38 @@ const { title = config.site.title, description = "" } = Astro.props;
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{title ? `${title} · ${config.site.title}` : config.site.title}</title>
+    <meta name="author" content={config.metadata.meta_author} />
     {description && <meta name="description" content={description} />}
-    <link rel="canonical" href={Astro.url.href} />
+    <link rel="canonical" href={canonicalUrl} />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title ? `${title} · ${config.site.title}` : config.site.title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:site_name" content={config.site.title} />
+    <meta property="og:image" content={socialImage} />
+    <meta property="og:image:alt" content="Sujal Choudhari writing online" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title ? `${title} · ${config.site.title}` : config.site.title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={socialImage} />
+    <script type="application/ld+json" set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Blog",
+      name: config.site.title,
+      url: config.site.base_url,
+      description: config.metadata.meta_description,
+      author: {
+        "@type": "Person",
+        name: config.metadata.meta_author,
+        url: "https://sujal.xyz/",
+        sameAs: [
+          "https://github.com/SujalChoudhari",
+          "https://linkedin.com/in/sujalchoudhari",
+          "https://art.sujal.xyz/",
+          "https://fs.sujal.xyz/",
+        ],
+      },
+    })} />
     <style is:global>
       :root { color-scheme: light; }
       * { box-sizing: border-box; }
