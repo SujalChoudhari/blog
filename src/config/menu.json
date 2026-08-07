@@ -2,8 +2,12 @@
   "main": [
     {
       "name": "Home",
-      "url": "https://sujal.xyz"
+      "url": "https://blog.sujal.xyz/"
     }
   ],
-  "footer": []
+  "footer": [
+    { "name": "Portfolio", "url": "https://sujal.xyz/" },
+    { "name": "Art", "url": "https://art.sujal.xyz/" },
+    { "name": "FileShare", "url": "https://fs.sujal.xyz/" }
+  ]
 }
