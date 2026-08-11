@@ -1,0 +1,88 @@
+---
+title: "Right-Sizing On-Device AI: A Look at Needle 2"
+date: 2026-08-11
+description: "Why deploying useful AI to constrained edge devices requires rethinking the architecture, focusing on tool calling and strict boundaries."
+tags: ["ai", "edge", "inference", "systems", "engineering"]
+categories: ["Engineering"]
+image: "/images/posts/code.jpg"
+author: Sujal Choudhari
+---
+
+I spend a lot of time thinking about how software actually runs on hardware. When you look at the current discussions around artificial intelligence, the focus is almost exclusively on scaling up. We see models with hundreds of billions of parameters, requiring clusters of GPUs just to load the weights into memory. But the edge, meaning the actual physical devices we interact with daily, does not look like a data center.
+
+The edge consists of cheap microcontrollers, budget phones, wearables, and embedded systems. These devices operate under strict thermal constraints, limited battery life, and highly restricted memory. If you want to put an agentic model on a budget smartphone or a smart home hub, a general-purpose chatbot is the wrong architecture. You do not need a model that can write sonnets or explain quantum mechanics to turn on a living room light or set a timer.
+
+This brings me to a recent release that caught my attention: Cactus Compute's Needle 2 [1]. It is an open, Apache 2.0 licensed, 45-million parameter model built specifically for tool calling, device use, and structured extraction [1].
+
+The interesting part of Needle 2 is not merely that it is small. It is that it accepts the constraints of its environment and optimizes entirely for a specific task profile. It trades general world knowledge for execution reliability in a narrow domain.
+
+### Why Task Scope Changes the Size Question
+
+The conventional wisdom in machine learning is that smaller models are just less capable versions of large models. This is true if the evaluation criteria is open-ended chat, creative writing, or general knowledge retrieval. A 45M parameter model is not going to win a trivia contest against a frontier model.
+
+But when we narrow the scope to device control and structured data extraction, the problem shape changes completely. If I ask a system to "dim the kitchen lights and play some jazz," the model does not need to understand the cultural history of jazz or the physics of lightbulbs. It only needs to map my messy, unstructured human language onto a predefined schema of available functions.
+
+Historically, we solved this with rigid voice command systems. You had to memorize the exact phrase, like "set living room lights to fifty percent." If you deviated from the script, the brittle regular expression parsing failed. Tool-calling models fix this by acting as a flexible translation layer between natural language and an API. The model must select the correct function from a list, extract the relevant arguments from the user's prompt, and format them correctly.
+
+When framed this way, it becomes obvious why you do not need billions of parameters. All the capacity of the model can be dedicated to grounding arguments and selecting tools, rather than storing facts about the world. A 45M parameter model is sufficient because it is solving a routing problem, not an intelligence problem.
+
+### The Mechanics of Constrained Execution
+
+A tool-calling model is only as useful as its ability to adhere strictly to a contract. If a model hallucinates a function name or passes a string where an integer is expected, the entire execution pipeline crashes.
+
+Needle 2 enforces this contract through a byte-level grammar compiled directly from the declared schemas [1]. Every output token is constrained by this grammar, meaning the model is structurally prevented from generating an invalid JSON response. The grammar carries the syntax, which relieves the neural network from having to learn how to perfectly format brackets, quotes, and commas.
+
+Consider a simplified example of how an interface might look on a smart device. The application defines a tool schema:
+
+```json
+{
+  "name": "set_thermostat",
+  "description": "Adjust the target temperature of a specific room.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "room": { "type": "string" },
+      "temperature_celsius": { "type": "number" }
+    },
+    "required": ["room", "temperature_celsius"]
+  }
+}
+```
+
+When a user says, "Make the bedroom a bit cooler, maybe 20 degrees," the model's only job is to populate that specific structure. The schema is the interface. The same principle applies to structured extraction from documents. You define the fields you want, and the model maps the input text into those fields. By offloading the syntax enforcement to a deterministic grammar engine, the neural network can focus entirely on understanding the semantic intent.
+
+### Refusal and Bounded Confidence
+
+One of the most critical features for an edge model is knowing its own limits. A small model will inevitably encounter requests it cannot handle. A generic chatbot might try to guess, hallucinating an action or providing a generic, unhelpful apology.
+
+For a device control model, guessing is dangerous. You do not want your oven turning on because the model misunderstood a command about heating up a room. Needle 2 implements a confidence score for its responses, and off-topic requests result in an empty call [1].
+
+This refusal behavior is a feature, not a bug. It allows the local device to act as a fast, private filter. If the request is within the local model's confidence threshold, it executes immediately. If the user asks something complex or out of scope, the local model refuses, and the system can safely fall back to a larger cloud model.
+
+This architecture keeps routine control actions instant and free, while preserving the ability to handle complex queries via escalation. It acknowledges that the local model is not meant to be omniscient, but rather a reliable first line of defense.
+
+### Deployment Realities: Memory and Inference Budgets
+
+When engineering for the edge, every byte matters. The memory hierarchy dictates performance. Reading from flash memory or DRAM consumes significant power and time, which is why shrinking the model size is non-negotiable for battery-powered devices.
+
+Needle 2 is distributed as a single 14 MB binary [1]. It uses Cactus Quants for CQ2-bit compression, which was applied during training rather than post-hoc [1]. This means the 2-bit quantization is native to the model, preventing the severe degradation that usually occurs when squeezing small models into low precision after they have been trained at higher precision.
+
+The inference budget is strictly bounded. Needle 2 runs a full session in just 28 MB of RAM [1]. This tiny footprint is achieved by co-designing the model and the inference engine. The weights never decompress into RAM; the engine expands the 2-bit codes inside vector registers and fuses them into integer operations [1]. This keeps the resident memory at the size of the binary blob.
+
+Furthermore, attention uses a 256-token sliding window, ensuring that the memory required for the context cache never grows beyond a fixed boundary, regardless of how long the session runs [1]. The system prompt and tool declarations are pinned in memory so the model never forgets its available actions [1].
+
+These optimizations translate directly into hardware compatibility. Cactus Compute reports that Needle 2 achieves over 500 tokens per second decode speed on a Raspberry Pi 5 [1]. It runs on VR headsets like the Meta Quest 3S and sub-$200 phones like the Samsung A-Series, achieving between 300 and 1500 tokens per second depending on the hardware [1]. The 28 MB peak session RAM even allows it to run on modern microcontrollers like the ESP32-S3 [1].
+
+When compared to other small models on device-use benchmarks, Needle 2 holds its own against FunctionGemma 270M, LFM2.5 230M, and Apple FM, despite being significantly smaller [1]. It is 5x to 70x smaller than those baselines, trading wins on accuracy while operating in a fraction of the memory footprint and utilizing a 2-bit quantization against their higher precision weights [1].
+
+### Building Systems That Fit
+
+There is a specific kind of engineering satisfaction in building systems that fit their physical constraints perfectly. A massive cloud model is impressive in its capability, but it is often a blunt instrument for simple tasks. We do not need a supercomputer to parse a request to lock the front door.
+
+Deploying a model like Needle 2 represents a shift in how we approach edge computing. We are moving away from trying to compress a general-purpose brain into a tiny box, and instead building highly specialized circuits for language translation and routing.
+
+By focusing on typed tool schemas, structured extraction, bounded memory, and strict refusal boundaries, we can build reliable, private, and fast interfaces for the physical devices we use every day. The future of the edge is not about making massive models smaller; it is about building small models that are exceptionally good at a narrow set of tasks.
+
+## Sources
+
+[1] [Cactus Compute: Needle 2](https://cactuscompute.com/needle)
