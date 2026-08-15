@@ -4,9 +4,44 @@ import Base from "@/layouts/Base.astro";
 import Posts from "@/layouts/Posts.astro";
 import { getSinglePage } from "@/lib/contentParser.astro";
 import { sortByDate } from "@/lib/utils/sortFunctions";
+import laneRegistry from "@/config/lane-registry.json";
 
 const posts = await getSinglePage("posts");
-const sortedPosts = sortByDate(posts);
+const publishedPosts = posts.filter((p: any) => !p.id.startsWith("-index") && p.id !== "post18.mdx" && p.id !== "post18");
+const sortedPosts = sortByDate(publishedPosts);
+
+type LaneKeys = "Technical" | "Writing" | "Life";
+const lanes: Record<LaneKeys, any[]> = {
+  Technical: [],
+  Writing: [],
+  Life: []
+};
+
+let registryIds = new Set(laneRegistry.map(r => r.id));
+let valid = true;
+let totalMapped = 0;
+
+if (registryIds.size !== 50) valid = false;
+if (registryIds.has("post18")) valid = false;
+
+sortedPosts.forEach((post: any) => {
+  const pureId = post.id.replace(/\.mdx?$/, '');
+  const entry = laneRegistry.find(r => r.id === pureId);
+  if (!entry || !lanes[entry.lane as LaneKeys]) {
+    valid = false;
+  } else {
+    lanes[entry.lane as LaneKeys].push(post);
+    totalMapped++;
+  }
+});
+
+if (totalMapped !== 50) valid = false;
+if (!valid) {
+  throw new Error("Invalid lane mapping");
+}
+
+const ITEMS_PER_PAGE = 10;
+const laneNames: LaneKeys[] = ["Technical", "Writing", "Life"];
 ---
 
 <Base title={config.site.title}>
@@ -16,10 +51,122 @@ const sortedPosts = sortByDate(posts);
         <h1>Writing</h1>
         <p>Notes on software, systems, and making things.</p>
       </header>
-      <Posts posts={sortedPosts} />
+
+      <div class="controls-container">
+        <div role="tablist" class="lane-tabs" aria-label="Content Lanes">
+          {laneNames.map(laneName => (
+            <button
+              role="tab"
+              aria-selected={laneName === "Technical" ? "true" : "false"}
+              aria-controls={`panel-${laneName}`}
+              id={`tab-${laneName}`}
+            >
+              {laneName}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div class="lane-panels">
+        {laneNames.map(laneName => {
+          const lanePosts = lanes[laneName];
+          const pages = [];
+          for(let i = 0; i < lanePosts.length; i += ITEMS_PER_PAGE) {
+            pages.push(lanePosts.slice(i, i + ITEMS_PER_PAGE));
+          }
+          const isInitialLane = laneName === 'Technical';
+
+          return (
+            <div
+              role="tabpanel"
+              id={`panel-${laneName}`}
+              aria-labelledby={`tab-${laneName}`}
+              hidden={!isInitialLane}
+              class="lane-panel"
+            >
+              {pages.map((pagePosts, pageIndex) => (
+                <div
+                  class="lane-page"
+                  data-page={pageIndex + 1}
+                  hidden={pageIndex !== 0}
+                >
+                  <Posts posts={pagePosts} />
+                </div>
+              ))}
+
+              {pages.length > 1 && (
+                <div class="pagination-controls" aria-label={`Pagination for ${laneName}`}>
+                  {pages.map((_, i) => (
+                    <button
+                      class="page-btn"
+                      data-target-page={i + 1}
+                      aria-current={i === 0 ? "page" : undefined}
+                    >
+                      Page {i + 1}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   </section>
 </Base>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const tabs = document.querySelectorAll('.lane-tabs button[role="tab"]');
+    const panels = document.querySelectorAll('.lane-panel');
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.setAttribute('aria-selected', 'false'));
+        panels.forEach(p => p.setAttribute('hidden', ''));
+
+        tab.setAttribute('aria-selected', 'true');
+        const controlsId = tab.getAttribute('aria-controls');
+        const activePanel = document.getElementById(controlsId);
+        if (activePanel) {
+          activePanel.removeAttribute('hidden');
+
+          const pages = activePanel.querySelectorAll('.lane-page');
+          const pageBtns = activePanel.querySelectorAll('.page-btn');
+          pages.forEach(p => {
+            if(p.getAttribute('data-page') === '1') p.removeAttribute('hidden');
+            else p.setAttribute('hidden', '');
+          });
+          pageBtns.forEach(btn => {
+            if(btn.getAttribute('data-target-page') === '1') btn.setAttribute('aria-current', 'page');
+            else btn.removeAttribute('aria-current');
+          });
+        }
+      });
+    });
+
+    const pageBtns = document.querySelectorAll('.page-btn');
+    pageBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const panel = btn.closest('.lane-panel');
+        if (!panel) return;
+        const targetPage = btn.getAttribute('data-target-page');
+
+        const panelBtns = panel.querySelectorAll('.page-btn');
+        panelBtns.forEach(b => {
+          if(b === btn) b.setAttribute('aria-current', 'page');
+          else b.removeAttribute('aria-current');
+        });
+
+        const pages = panel.querySelectorAll('.lane-page');
+        pages.forEach(p => {
+          if(p.getAttribute('data-page') === targetPage) p.removeAttribute('hidden');
+          else p.setAttribute('hidden', '');
+        });
+      });
+    });
+  });
+</script>
 
 <style>
   .home-container {
@@ -42,5 +189,64 @@ const sortedPosts = sortByDate(posts);
     color: var(--muted);
     font-family: var(--serif);
     font-size: 1.18rem;
+  }
+
+  .controls-container {
+    margin-bottom: 2rem;
+  }
+
+  .lane-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .lane-tabs button {
+    padding: 0.35rem 0.85rem;
+    background: transparent;
+    border: 1px solid var(--rule);
+    color: var(--muted);
+    cursor: pointer;
+    font-family: var(--sans);
+    font-size: 0.95rem;
+    border-radius: 4px;
+  }
+
+  .lane-tabs button[aria-selected="true"] {
+    background: var(--ink);
+    color: var(--paper-raised);
+    border-color: var(--ink);
+  }
+
+  .lane-tabs button:focus-visible,
+  .pagination-controls .page-btn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .pagination-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--rule);
+  }
+
+  .pagination-controls .page-btn {
+    padding: 0.25rem 0.65rem;
+    background: transparent;
+    border: 1px solid var(--rule);
+    color: var(--muted);
+    cursor: pointer;
+    font-family: var(--sans);
+    font-size: 0.85rem;
+    border-radius: 4px;
+  }
+
+  .pagination-controls .page-btn[aria-current="page"] {
+    background: #e9e5dd;
+    color: var(--ink);
+    border-color: var(--muted);
   }
 </style>

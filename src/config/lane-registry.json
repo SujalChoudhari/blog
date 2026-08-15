@@ -1,0 +1,252 @@
+[
+  {
+    "id": "post0",
+    "lane": "Life",
+    "reason": "Personal motivation and reflection on starting a blog."
+  },
+  {
+    "id": "post1",
+    "lane": "Technical",
+    "reason": "Discussion of web infrastructure and the concept of enshittification."
+  },
+  {
+    "id": "post2",
+    "lane": "Life",
+    "reason": "Personal story and lived experience during Hacktoberfest."
+  },
+  {
+    "id": "post3",
+    "lane": "Life",
+    "reason": "Lived experience and personal triumph at a hackathon."
+  },
+  {
+    "id": "post4",
+    "lane": "Writing",
+    "reason": "Announcing and discussing the writing of a book."
+  },
+  {
+    "id": "post5",
+    "lane": "Life",
+    "reason": "Personal recounting of a hackathon journey."
+  },
+  {
+    "id": "post6",
+    "lane": "Technical",
+    "reason": "Technical strategies for leveraging LLMs."
+  },
+  {
+    "id": "post7",
+    "lane": "Life",
+    "reason": "Personal reflection on receiving an award."
+  },
+  {
+    "id": "post8",
+    "lane": "Technical",
+    "reason": "Discussion on technical practice and engineering mastery."
+  },
+  {
+    "id": "post9",
+    "lane": "Technical",
+    "reason": "Advanced graphics and game development techniques."
+  },
+  {
+    "id": "post10",
+    "lane": "Life",
+    "reason": "Process and personal strategies for breaking out of tutorial hell."
+  },
+  {
+    "id": "post11",
+    "lane": "Technical",
+    "reason": "Technical practice for coding features confidently."
+  },
+  {
+    "id": "post12",
+    "lane": "Technical",
+    "reason": "Analysis of AI systems and human logic in software."
+  },
+  {
+    "id": "post13",
+    "lane": "Technical",
+    "reason": "Software architecture, SOLID principles, and design patterns."
+  },
+  {
+    "id": "post14",
+    "lane": "Technical",
+    "reason": "Technical discussion on data structures and algorithms."
+  },
+  {
+    "id": "post15",
+    "lane": "Life",
+    "reason": "Personal journey and insights gained from game development."
+  },
+  {
+    "id": "post16",
+    "lane": "Technical",
+    "reason": "Deep dive into coding advanced game features."
+  },
+  {
+    "id": "post17",
+    "lane": "Life",
+    "reason": "Focus on the process of continuous learning and practice."
+  },
+  {
+    "id": "post19",
+    "lane": "Writing",
+    "reason": "Announcing a new book release."
+  },
+  {
+    "id": "post20",
+    "lane": "Technical",
+    "reason": "C++ data structures for competitive programming."
+  },
+  {
+    "id": "post21",
+    "lane": "Technical",
+    "reason": "Technical guide to the Scala programming language."
+  },
+  {
+    "id": "post22",
+    "lane": "Writing",
+    "reason": "Guide to writing non-fiction IEEE papers."
+  },
+  {
+    "id": "post23",
+    "lane": "Life",
+    "reason": "Process and team building insights for hackathons."
+  },
+  {
+    "id": "post24",
+    "lane": "Technical",
+    "reason": "Technical configurations and shortcuts for tmux."
+  },
+  {
+    "id": "post25",
+    "lane": "Technical",
+    "reason": "Technical journey of building a custom operating system."
+  },
+  {
+    "id": "post26",
+    "lane": "Life",
+    "reason": "Process and personal strategies for winning hackathons."
+  },
+  {
+    "id": "post27",
+    "lane": "Writing",
+    "reason": "Guide to writing an educational book."
+  },
+  {
+    "id": "post28",
+    "lane": "Writing",
+    "reason": "Lessons on prose and writing techniques."
+  },
+  {
+    "id": "post29",
+    "lane": "Technical",
+    "reason": "Clean code principles and maintainability."
+  },
+  {
+    "id": "post30",
+    "lane": "Technical",
+    "reason": "Readability and SOLID principles for codebase organization."
+  },
+  {
+    "id": "post31",
+    "lane": "Technical",
+    "reason": "Systems engineering and programming language design."
+  },
+  {
+    "id": "post32",
+    "lane": "Life",
+    "reason": "Psychological and presentation process for hackathons."
+  },
+  {
+    "id": "post33",
+    "lane": "Life",
+    "reason": "Personal reflections on building value and maximizing potential."
+  },
+  {
+    "id": "post34",
+    "lane": "Technical",
+    "reason": "Infrastructure and technical dive into rebuilding email protocols."
+  },
+  {
+    "id": "post35",
+    "lane": "Technical",
+    "reason": "Engineering architecture of a C++ trading engine."
+  },
+  {
+    "id": "post36",
+    "lane": "Life",
+    "reason": "Personal story and feelings about a fake police scare."
+  },
+  {
+    "id": "post37",
+    "lane": "Life",
+    "reason": "Personal reflection on balance and growth."
+  },
+  {
+    "id": "post38",
+    "lane": "Technical",
+    "reason": "Infrastructure war story about access boundaries."
+  },
+  {
+    "id": "post39",
+    "lane": "Life",
+    "reason": "Personal reflection on shifting priorities."
+  },
+  {
+    "id": "post40",
+    "lane": "Technical",
+    "reason": "Systems engineering and WebSocket architecture."
+  },
+  {
+    "id": "post41",
+    "lane": "Technical",
+    "reason": "Technical practice regarding architecture PRs."
+  },
+  {
+    "id": "post42",
+    "lane": "Writing",
+    "reason": "Worldbuilding and the evolution of a game into a novel."
+  },
+  {
+    "id": "post43",
+    "lane": "Technical",
+    "reason": "Engineering insights into compiler constraints."
+  },
+  {
+    "id": "post44",
+    "lane": "Technical",
+    "reason": "Architecture discussion about dashboards and sources of truth."
+  },
+  {
+    "id": "post45",
+    "lane": "Technical",
+    "reason": "Engineering lessons from Rust ownership vs C++."
+  },
+  {
+    "id": "post46",
+    "lane": "Life",
+    "reason": "Process of solving hard problems by stepping away."
+  },
+  {
+    "id": "post47",
+    "lane": "Life",
+    "reason": "Feelings and personal courage in launching a project."
+  },
+  {
+    "id": "post48",
+    "lane": "Technical",
+    "reason": "Architecture and edge device constraints for AI."
+  },
+  {
+    "id": "post49",
+    "lane": "Writing",
+    "reason": "Discussion on designing a world vs generating it."
+  },
+  {
+    "id": "post50",
+    "lane": "Life",
+    "reason": "Personal reflection on revisiting the past and cleaning."
+  }
+]
