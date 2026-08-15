@@ -248,5 +248,10 @@
     "id": "post50",
     "lane": "Life",
     "reason": "Personal reflection on revisiting the past and cleaning."
+  },
+  {
+    "id": "post51",
+    "lane": "Technical",
+    "reason": "Mole architecture, MCP workflow, evidence verification, and local-data privacy boundary."
   }
 ]
