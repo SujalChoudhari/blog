@@ -1,15 +1,30 @@
 ---
 import config from "@/config/config.json";
 import menu from "@/config/menu.json";
+
+const currentPath = Astro.url.pathname.replace(/\/+$/, "") || "/";
+const normalizePath = (url: string) => {
+  if (!url.startsWith("/")) return "";
+  return url.replace(/\/+$/, "") || "/";
+};
 ---
 
-<header class="site-header">
-  <div>
-    <a href="/" class="site-title">{config.site.logo_text || config.site.title}</a>
-  </div>
-  <nav class="site-nav">
-    {menu.main.map((item) => (
-      <a href={item.url}>{item.name}</a>
-    ))}
+<header class="site-header" aria-label="Site header">
+  <nav class="site-nav" aria-label="Primary navigation">
+    <a
+      href="/"
+      class="site-title"
+      aria-current={currentPath === "/" ? "page" : undefined}
+    >{config.site.logo_text || config.site.title}</a>
+    <span class="site-nav-links">
+      {menu.main.filter((item) => item.url !== "/").map((item) => (
+        <a
+          href={item.url}
+          aria-current={normalizePath(item.url) === currentPath ? "page" : undefined}
+        >
+          {item.name}
+        </a>
+      ))}
+    </span>
   </nav>
 </header>

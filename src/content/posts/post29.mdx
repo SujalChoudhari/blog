@@ -34,22 +34,32 @@ Let's get practical. Modular programming isn't just a fancy term—it's a powerf
 Here's a simple example in Python that demonstrates this principle:
 
 ```python
-# ./utils/math_operations.py
-def add(a: Vector2, b: Vector2) -> Vector2:
-    return a + b
-def subtract(a: Vector2, b: Vector2) -> Vector2:
-    return a - b
+from dataclasses import dataclass
 
-# ./main_program.py
-from utils import math_operations
-def main():
+@dataclass(frozen=True)
+class Vector2:
+    x: float
+    y: float
+
+
+def add(a: Vector2, b: Vector2) -> Vector2:
+    return Vector2(a.x + b.x, a.y + b.y)
+
+
+def subtract(a: Vector2, b: Vector2) -> Vector2:
+    return Vector2(a.x - b.x, a.y - b.y)
+
+
+def main() -> None:
     x = Vector2(10, 20)
     y = Vector2(5, 5)
-    sum_result = math_operations.add(x, y)
-    diff_result = math_operations.subtract(x, y)
-    print(f"The sum of {x} and {y} is {sum_result.x}")
-    print(f"The difference between {x} and {y} is {diff_result.y}")
-if name == "__main__":
+    sum_result = add(x, y)
+    diff_result = subtract(x, y)
+    print(f"The sum of {x} and {y} is {sum_result}")
+    print(f"The difference between {x} and {y} is {diff_result}")
+
+
+if __name__ == "__main__":
     main()
 ```
 
@@ -83,15 +93,15 @@ Here's a counterintuitive tip: **don't document your code too early**. Wait unti
 Instead. Focus on writing self-explanatory code first. When you do document, focus on the why and when, not the what. What part of the code is the code itself. Here's an example of effective documentation:
 
 ```python
-def calculate_discount(price, discount_rate):
-"""
-Unified function for calculating discounts.
-To calculate discount for the products listed on the website.
-Example: calculate_discount(100, 0.2) returns 80.0
-"""
+def calculate_discount(price: float, discount_rate: float) -> float:
+    """Calculate the discounted price for a product."""
     if price < 0 or not (0 <= discount_rate <= 1):
         raise ValueError("Invalid input values.")
     return price - (price * discount_rate)
+
+
+if __name__ == "__main__":
+    print(calculate_discount(100, 0.2))
 ```
 
 See. See how the documentation explains when to use the function and why it exists, rather than explaining the obvious calculations.

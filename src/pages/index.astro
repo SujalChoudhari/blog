@@ -10,9 +10,37 @@ const sortedPosts = sortByDate(posts);
 ---
 
 <Base title={config.site.title}>
-  <section class="section">
-    <div class="container">
+  <section class="section home-section">
+    <div class="container home-container">
+      <header class="home-header">
+        <h1>Writing</h1>
+        <p>Notes on software, systems, and making things.</p>
+      </header>
       <Posts posts={sortedPosts} />
     </div>
   </section>
 </Base>
+
+<style>
+  .home-container {
+    max-width: 860px;
+  }
+
+  .home-header {
+    margin-bottom: 2.25rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .home-header h1 {
+    margin-bottom: 0.55rem;
+  }
+
+  .home-header p {
+    max-width: 36rem;
+    margin: 0;
+    color: var(--muted);
+    font-family: var(--serif);
+    font-size: 1.18rem;
+  }
+</style>

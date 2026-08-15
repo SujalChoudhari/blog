@@ -1,18 +1,9 @@
 ---
 import config from "@/config/config.json";
-import menu from "@/config/menu.json";
 import { markdownify } from "@/lib/utils/textConverter";
 ---
 
-<footer class="site-footer">
-  {menu.footer.length > 0 && (
-    <nav class="site-nav">
-      {menu.footer.map((item) => (
-        <a href={item.url}>{item.name}</a>
-      ))}
-    </nav>
-  )}
-  <div>
-    <span set:html={markdownify(config.params.copyright)} />
-  </div>
+<footer class="site-footer" aria-label="Site footer">
+  <p><a href="/rss.xml">RSS</a></p>
+  <p set:html={markdownify(config.params.copyright)} />
 </footer>

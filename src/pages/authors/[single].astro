@@ -1,11 +1,11 @@
 ---
-import AuthorSingle from "@/layouts/AuthorSingle.astro";
 import Base from "@/layouts/Base.astro";
 import { getSinglePage } from "@/lib/contentParser.astro";
 import dateFormat from "@/lib/utils/dateFormat";
 
 import { sortByDate } from "@/lib/utils/sortFunctions";
-import { humanize, slugify } from "@/lib/utils/textConverter";
+import { slugify } from "@/lib/utils/textConverter";
+import getPostAuthors from "@/lib/utils/postAuthors";
 import type { CollectionEntry } from "astro:content";
 
 export async function getStaticPaths() {
@@ -27,7 +27,7 @@ const { title, meta_title, description, image } = author.data;
 const posts = await getSinglePage("posts");
 const sortPostsByDate: CollectionEntry<"posts">[] = sortByDate(posts);
 const currentPosts = sortPostsByDate.filter((post) => {
-  return post.data.authors
+  return getPostAuthors(post.data)
     .map((author) => slugify(author))
     .includes(slugify(title));
 });

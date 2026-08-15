@@ -1,63 +1,260 @@
 ---
 import { getSinglePage } from "@/lib/contentParser.astro";
 import dateFormat from "@/lib/utils/dateFormat";
+import getPostAuthors from "@/lib/utils/postAuthors";
 import { humanize, markdownify, slugify } from "@/lib/utils/textConverter";
-import similarItems from "@/lib/utils/similarItems";
+import { sortByDate } from "@/lib/utils/sortFunctions";
 import { render } from "astro:content";
 import type { CollectionEntry } from "astro:content";
 
 const allAuthors = await getSinglePage("authors");
-const posts = await getSinglePage("posts");
-const { post } = Astro.props;
-const similarPosts = similarItems(post, posts, post.id);
+const posts = sortByDate(await getSinglePage("posts")) as CollectionEntry<"posts">[];
+const { post } = Astro.props as { post: CollectionEntry<"posts"> };
+const currentIndex = posts.findIndex((entry) => entry.id === post.id);
+const newerPost = currentIndex > 0 ? posts[currentIndex - 1] : undefined;
+const olderPost = currentIndex >= 0 ? posts[currentIndex + 1] : undefined;
+const olderPosts = currentIndex >= 0 ? posts.slice(currentIndex + 1, currentIndex + 4) : [];
+const alsoRead = posts
+  .filter((candidate) => candidate.id !== post.id)
+  .map((candidate) => ({
+    post: candidate,
+    sharedTags: candidate.data.tags.filter((tag) => post.data.tags.includes(tag)),
+  }))
+  .filter(({ sharedTags }) => sharedTags.length > 0)
+  .sort((a, b) => {
+    const sharedTagDifference = b.sharedTags.length - a.sharedTags.length;
+    if (sharedTagDifference !== 0) return sharedTagDifference;
+
+    const dateDifference =
+      new Date(b.post.data.date ?? 0).valueOf() - new Date(a.post.data.date ?? 0).valueOf();
+    if (dateDifference !== 0) return dateDifference;
+
+    return a.post.id.localeCompare(b.post.id);
+  })[0];
 const { Content } = await render(post);
-const { title, description, authors, categories, image, date, tags } = post.data;
+const { title, description, categories, date, tags } = post.data;
+const authors = getPostAuthors(post.data);
 ---
 
-<section class="section">
-  <div class="container">
+<section class="section post-section">
+  <div class="reading-width">
     <article>
-      <div>
+      <header class="post-header">
         <h1 set:html={markdownify(title)} />
-        <p class="post-meta">
-          {
-            allAuthors
-              .filter((author) =>
-                authors
-                  .map((author: string) => slugify(author))
-                  .includes(slugify(author.data.title))
-              )
-              .map((author) => author.data.title)
-              .join(", ")
-          }
-          &nbsp;·&nbsp;{dateFormat(date)}
-          &nbsp;·&nbsp;
-          {categories.map((category: string) => humanize(category)).join(", ")}
+        {description && <p class="post-dek">{description}</p>}
+        <p class="post-meta" aria-label="Publication details">
+          <span>
+            By
+            {authors.map((author: string, index: number) => (
+              <span>
+                {index > 0 && ", "}
+                {
+                  allAuthors.some((entry) => slugify(entry.data.title) === slugify(author)) ? (
+                    <a href={`/authors/${slugify(author)}`}>{author}</a>
+                  ) : (
+                    author
+                  )
+                }
+              </span>
+            ))}
+          </span>
+          {date && <><span aria-hidden="true">·</span><time datetime={date.toISOString()}>{dateFormat(date)}</time></>}
+          {categories.length > 0 && <><span aria-hidden="true">·</span><span>{categories.map((category: string) => humanize(category)).join(", ")}</span></>}
         </p>
-      </div>
+      </header>
 
       <div class="post-body content">
         <Content />
       </div>
 
-      <div class="post-meta">
-        <ul class="tag-list">
-          {tags.map((tag: string) => (
+      {tags.length > 0 && (
+        <footer class="post-footer">
+          <p class="post-tags">
+            <span>Tags: </span>
+            <span class="tag-list" aria-label="Post tags">
+              {tags.map((tag: string, index: number) => (
+                <span>{index > 0 && ", "}<a href={`/tags/${slugify(tag)}`}>{humanize(tag)}</a></span>
+              ))}
+            </span>
+          </p>
+        </footer>
+      )}
+    </article>
+
+    {(newerPost || olderPost) && (
+      <nav class="post-navigation" aria-label="Adjacent posts">
+        {newerPost && (
+          <a href={`/${newerPost.id}`}>
+            <span>Newer</span>
+            <strong>{newerPost.data.title}</strong>
+          </a>
+        )}
+        {olderPost && (
+          <a href={`/${olderPost.id}`}>
+            <span>Older</span>
+            <strong>{olderPost.data.title}</strong>
+          </a>
+        )}
+      </nav>
+    )}
+
+    {olderPosts.length > 0 && (
+      <section class="post-discovery" aria-labelledby="older-writing-heading">
+        <h2 id="older-writing-heading">Older writing</h2>
+        <ul>
+          {olderPosts.map((older: CollectionEntry<"posts">) => (
             <li>
-              <a href={`/tags/${slugify(tag)}`}>#{humanize(tag)}</a>
+              <a href={`/${older.id}`}>
+                <span>{older.data.title}</span>
+                {older.data.date && <time datetime={older.data.date.toISOString()}>{dateFormat(older.data.date)}</time>}
+              </a>
             </li>
           ))}
         </ul>
-      </div>
-    </article>
+      </section>
+    )}
+
+    {alsoRead && (
+      <section class="post-discovery" aria-labelledby="also-read-heading">
+        <h2 id="also-read-heading">Also read</h2>
+        <p><a href={`/${alsoRead.post.id}`}>{alsoRead.post.data.title}</a></p>
+      </section>
+    )}
   </div>
 </section>
 
-<section class="section">
-  <div class="container">
-    <h2 class="similar-title">Suggested posts</h2>
-    <ul class="post-list">
-      {similarPosts.slice(0, 3).map((p) => <li class="post-list-item"><span>{dateFormat(p.data.date!)}</span><a href={`/${p.id}`}>{p.data.title}</a></li>)}
-    </ul>
-  </div>
-</section>
+<style>
+  .post-section {
+    padding-top: clamp(3rem, 8vw, 6rem);
+  }
+
+  .post-header {
+    padding-bottom: 1.75rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .post-header h1 {
+    max-width: 18ch;
+    margin-bottom: 1.2rem;
+    font-size: clamp(2.45rem, 6vw, 4.6rem);
+    overflow-wrap: anywhere;
+  }
+
+  .post-dek {
+    max-width: 44rem;
+    margin-bottom: 1.25rem;
+    color: var(--muted);
+    font-family: var(--serif);
+    font-size: clamp(1.18rem, 2.2vw, 1.42rem);
+    line-height: 1.5;
+  }
+
+  .post-body {
+    padding-top: 0.35rem;
+  }
+
+  .post-footer {
+    margin-top: 3rem;
+    padding-top: 1.2rem;
+    border-top: 1px solid var(--rule);
+  }
+
+  .post-tags {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+
+  .post-navigation {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem;
+    margin-top: clamp(3rem, 8vw, 5rem);
+    padding-top: 1.2rem;
+    border-top: 1px solid var(--rule);
+  }
+
+  .post-navigation a {
+    display: grid;
+    gap: 0.2rem;
+    min-height: 44px;
+    text-decoration: none;
+  }
+
+  .post-navigation a + a {
+    text-align: right;
+  }
+
+  .post-navigation span {
+    color: var(--muted);
+    font-size: 0.78rem;
+  }
+
+  .post-navigation strong {
+    color: var(--ink);
+    font-family: var(--serif);
+    font-size: 1.05rem;
+    font-weight: 500;
+  }
+
+  .post-navigation a:hover strong {
+    color: var(--accent-dark);
+    text-decoration: underline;
+  }
+
+  .post-discovery {
+    margin-top: clamp(2.5rem, 6vw, 4rem);
+    padding-top: 1.2rem;
+    border-top: 1px solid var(--rule);
+  }
+
+  .post-discovery h2 {
+    margin-bottom: 0.8rem;
+    font-family: var(--sans);
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .post-discovery ul {
+    display: grid;
+    gap: 0.55rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .post-discovery li,
+  .post-discovery p {
+    margin: 0;
+  }
+
+  .post-discovery li a {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    text-decoration: none;
+  }
+
+  .post-discovery li time {
+    flex: 0 0 auto;
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+
+  .post-discovery a:hover {
+    text-decoration: underline;
+  }
+
+  @media (max-width: 640px) {
+    .post-navigation {
+      grid-template-columns: 1fr;
+    }
+
+    .post-navigation a + a {
+      text-align: left;
+    }
+  }
+</style>
