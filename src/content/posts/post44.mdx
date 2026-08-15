@@ -10,7 +10,7 @@ author: Sujal Choudhari
 
 A dashboard is easy to ask for and difficult to own.
 
-The request usually sounds harmless: put the important values in one place, add a few filters, and make the page refresh automatically. The result can be useful. It can also become another representation of data that already exists somewhere else, with its own queries, caches, permissions, tests, alerts, and failure modes.
+The request usually sounds simple: put the important values in one place, add a few filters, and make the page refresh automatically. The result can be useful. It can also become another representation of data that already exists somewhere else, with its own queries, caches, permissions, tests, alerts, and failure modes.
 
 That distinction matters. A dashboard is a projection. It is a view calculated from systems of record. Treating the projection as the record creates a second state to maintain, and a second state can drift from the first.
 
@@ -48,7 +48,7 @@ Metrics, logs, traces, and domain records serve different purposes. A metric can
 
 A useful projection preserves the meaning and origin of each value. It identifies the source, the timestamp, the aggregation window, and the freshness of the result. For example, a panel labeled "failed jobs" should make clear whether it counts failed attempts, failed job definitions, or jobs currently in a failed state. A precise label often prevents more confusion than another chart.
 
-The best dashboard may therefore be small. It can contain a few indicators that support a recurring decision, link to the underlying records, and make stale data visible. A page that answers three operational questions correctly is more valuable than a wall of charts that encourages inspection without action.
+The useful dashboard may therefore be small. It can contain a few indicators that support a recurring decision, link to the underlying records, and make stale data visible. A page that answers three operational questions correctly is more valuable than a wall of charts that encourages inspection without action.
 
 ## Notifications can beat another screen
 
@@ -68,4 +68,4 @@ For a read-only projection, make freshness and provenance visible. Prefer querie
 
 Finally, measure the maintenance surface in concrete terms: refresh jobs, schemas, access rules, alert definitions, owners, and failure recovery. Every additional surface has to be kept correct. The visual result is only the smallest part of the system.
 
-The useful question is not whether another dashboard can be built. It is whether another projection improves a real decision enough to justify another place where state can become stale. In many systems, one clear source of truth, a few well-defined queries, and notifications tied to meaningful conditions provide better operational clarity than another screen.
+Ask whether another projection improves a real decision enough to justify another place where state can become stale. In many systems, one clear source of truth, a few well-defined queries, and notifications tied to meaningful conditions provide better operational clarity than another screen.

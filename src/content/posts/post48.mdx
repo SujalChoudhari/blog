@@ -12,7 +12,7 @@ I spend a lot of time thinking about how software actually runs on hardware. Whe
 
 The edge consists of cheap microcontrollers, budget phones, wearables, and embedded systems. These devices operate under strict thermal constraints, limited battery life, and highly restricted memory. If you want to put an agentic model on a budget smartphone or a smart home hub, a general-purpose chatbot is the wrong architecture. You do not need a model that can write sonnets or explain quantum mechanics to turn on a living room light or set a timer.
 
-This brings me to a recent release that caught my attention: Cactus Compute's Needle 2 [1]. It is an open, Apache 2.0 licensed, 45-million parameter model built specifically for tool calling, device use, and structured extraction [1].
+This brings me to a recent release that caught my attention: Cactus Compute's Needle 2 [1]. Cactus describes it as an open, Apache 2.0 licensed, 45-million parameter model built specifically for tool calling, device use, and structured extraction [1].
 
 The interesting part of Needle 2 is not merely that it is small. It is that it accepts the constraints of its environment and optimizes entirely for a specific task profile. It trades general world knowledge for execution reliability in a narrow domain.
 
@@ -30,7 +30,7 @@ When framed this way, it becomes obvious why you do not need billions of paramet
 
 A tool-calling model is only as useful as its ability to adhere strictly to a contract. If a model hallucinates a function name or passes a string where an integer is expected, the entire execution pipeline crashes.
 
-Needle 2 enforces this contract through a byte-level grammar compiled directly from the declared schemas [1]. Every output token is constrained by this grammar, meaning the model is structurally prevented from generating an invalid JSON response. The grammar carries the syntax, which relieves the neural network from having to learn how to perfectly format brackets, quotes, and commas.
+According to Cactus Compute, Needle 2 enforces part of this contract through a byte-level grammar compiled from the declared schemas [1]. The grammar constrains token sequences to syntactically valid JSON, but that does not guarantee the right tool name, sensible argument values, or a safe action. Schema validation and application logic still have to check semantic and tool correctness.
 
 Consider a simplified example of how an interface might look on a smart device. The application defines a tool schema:
 
@@ -49,13 +49,13 @@ Consider a simplified example of how an interface might look on a smart device. 
 }
 ```
 
-When a user says, "Make the bedroom a bit cooler, maybe 20 degrees," the model's only job is to populate that specific structure. The schema is the interface. The same principle applies to structured extraction from documents. You define the fields you want, and the model maps the input text into those fields. By offloading the syntax enforcement to a deterministic grammar engine, the neural network can focus entirely on understanding the semantic intent.
+When a user says, "Make the bedroom a bit cooler, maybe 20 degrees," the model has to populate that structure. The schema is the interface, but a valid JSON object can still contain the wrong room or an unsafe temperature. The same distinction applies to structured extraction from documents: the grammar handles syntax, while the model and application still have to get the meaning right.
 
 ### Refusal and Bounded Confidence
 
 One of the most critical features for an edge model is knowing its own limits. A small model will inevitably encounter requests it cannot handle. A generic chatbot might try to guess, hallucinating an action or providing a generic, unhelpful apology.
 
-For a device control model, guessing is dangerous. You do not want your oven turning on because the model misunderstood a command about heating up a room. Needle 2 implements a confidence score for its responses, and off-topic requests result in an empty call [1].
+For a device control model, guessing is dangerous. You do not want your oven turning on because the model misunderstood a command about heating up a room. Cactus Compute says Needle 2 uses a confidence score for its responses, and that off-topic requests result in an empty call [1].
 
 This refusal behavior is a feature, not a bug. It allows the local device to act as a fast, private filter. If the request is within the local model's confidence threshold, it executes immediately. If the user asks something complex or out of scope, the local model refuses, and the system can safely fall back to a larger cloud model.
 
@@ -65,15 +65,15 @@ This architecture keeps routine control actions instant and free, while preservi
 
 When engineering for the edge, every byte matters. The memory hierarchy dictates performance. Reading from flash memory or DRAM consumes significant power and time, which is why shrinking the model size is non-negotiable for battery-powered devices.
 
-Needle 2 is distributed as a single 14 MB binary [1]. It uses Cactus Quants for CQ2-bit compression, which was applied during training rather than post-hoc [1]. This means the 2-bit quantization is native to the model, preventing the severe degradation that usually occurs when squeezing small models into low precision after they have been trained at higher precision.
+The deployment figures in this section come from Cactus Compute's published Needle 2 material, not measurements from this blog post. Cactus says Needle 2 is distributed as a single 14 MB binary and uses Cactus Quants for CQ2-bit compression, applied during training rather than post-hoc [1]. The vendor presents this as a way to fit the model into a small footprint; it is not an independent quality or speed result here.
 
-The inference budget is strictly bounded. Needle 2 runs a full session in just 28 MB of RAM [1]. This tiny footprint is achieved by co-designing the model and the inference engine. The weights never decompress into RAM; the engine expands the 2-bit codes inside vector registers and fuses them into integer operations [1]. This keeps the resident memory at the size of the binary blob.
+The vendor reports a 28 MB peak session RAM figure [1]. Cactus attributes that footprint to co-design between the model and inference engine, including keeping the weights compressed and expanding 2-bit codes inside vector registers [1]. These are vendor-supplied implementation claims, not measurements I reproduced.
 
-Furthermore, attention uses a 256-token sliding window, ensuring that the memory required for the context cache never grows beyond a fixed boundary, regardless of how long the session runs [1]. The system prompt and tool declarations are pinned in memory so the model never forgets its available actions [1].
+Furthermore, Cactus says attention uses a 256-token sliding window, which bounds the context window described in its material, and that the system prompt and tool declarations are pinned in memory [1].
 
-These optimizations translate directly into hardware compatibility. Cactus Compute reports that Needle 2 achieves over 500 tokens per second decode speed on a Raspberry Pi 5 [1]. It runs on VR headsets like the Meta Quest 3S and sub-$200 phones like the Samsung A-Series, achieving between 300 and 1500 tokens per second depending on the hardware [1]. The 28 MB peak session RAM even allows it to run on modern microcontrollers like the ESP32-S3 [1].
+These optimizations are also part of Cactus Compute's compatibility claims. The vendor reports over 500 tokens per second decode speed on a Raspberry Pi 5, 300 to 1500 tokens per second on listed headsets and phones depending on hardware, and support for devices such as the ESP32-S3 at the reported memory budget [1].
 
-When compared to other small models on device-use benchmarks, Needle 2 holds its own against FunctionGemma 270M, LFM2.5 230M, and Apple FM, despite being significantly smaller [1]. It is 5x to 70x smaller than those baselines, trading wins on accuracy while operating in a fraction of the memory footprint and utilizing a 2-bit quantization against their higher precision weights [1].
+Cactus also compares Needle 2 with FunctionGemma 270M, LFM2.5 230M, and Apple FM on its device-use benchmarks. The reported comparison says Needle 2 is 5x to 70x smaller than those baselines, with tradeoffs in accuracy and memory footprint [1]. Those are the vendor's benchmark results, not an independent comparison in this post.
 
 ### Building Systems That Fit
 
@@ -81,7 +81,7 @@ There is a specific kind of engineering satisfaction in building systems that fi
 
 Deploying a model like Needle 2 represents a shift in how we approach edge computing. We are moving away from trying to compress a general-purpose brain into a tiny box, and instead building highly specialized circuits for language translation and routing.
 
-By focusing on typed tool schemas, structured extraction, bounded memory, and strict refusal boundaries, we can build reliable, private, and fast interfaces for the physical devices we use every day. The future of the edge is not about making massive models smaller; it is about building small models that are exceptionally good at a narrow set of tasks.
+By focusing on typed tool schemas, structured extraction, bounded memory, and refusal boundaries, we can build narrower interfaces for physical devices. For this class of edge software, the goal is not simply to make a massive model smaller. It is to make a small model useful for a defined set of tasks.
 
 ## Sources
 

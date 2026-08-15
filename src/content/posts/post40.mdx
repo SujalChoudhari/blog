@@ -8,9 +8,9 @@ image: "/images/posts/server_room.jpg"
 author: Sujal Choudhari
 ---
 
-If you build real-time dashboards, microservice nodes, or high-frequency telemetry tools, you quickly run into a familiar friction point: standard HTTP is chatty.
+If you build real-time dashboards, microservice nodes, or high-frequency telemetry tools, you can run into a familiar friction point: many small HTTP requests may carry more protocol work than the payload itself.
 
-Every time a client makes a REST request, it goes through the usual routine. Headers get serialized, TCP connections get negotiated or reused with keep-alive overhead, TLS handshakes execute, and text-based JSON payloads get pushed over the wire. When an app fires dozens or hundreds of small REST calls per minute, that protocol overhead adds up fast.
+Every client request carries protocol work. Connection reuse, HTTP version, header compression, TLS, payload size, and server behavior all affect the cost. For an app making many small calls, that overhead can become noticeable, but it is a workload-dependent tradeoff rather than a fixed property of HTTP.
 
 The typical alternative is switching to raw WebSockets. But raw WebSockets give you a plain message pipe. You lose HTTP verbs (`GET`, `POST`, `PUT`, `DELETE`), URL routing, status codes, and request-response correlation. Suddenly you are writing custom JSON wrappers with manually tracked message IDs just to figure out which server response belongs to which client request.
 
@@ -28,11 +28,11 @@ Problems start when your access pattern changes. Consider these common setups:
 2. Browser-to-node streaming components where small control commands and query frames are pushed back and forth constantly.
 3. Microservice meshes and internal tools that execute frequent request-reply calls between services.
 
-With standard `fetch` or `axios` calls over HTTP/1.1 or HTTP/2, every single request carries redundant HTTP header fields like user agents, accept headers, cookies, and authorization tokens. Even with compression and header table compression, you are sending raw text keys over TCP sockets for every small payload.
+With standard `fetch` or `axios` calls over HTTP/1.1 or HTTP/2, each request still carries request metadata such as authorization, cookies, or accepted formats. Connection reuse and header compression can reduce the repeated bytes, so the actual overhead depends on the client, protocol version, and request shape.
 
-Furthermore, HTTP request-response framing requires managing connection pools, handling connection limits per domain, and dealing with head-of-line blocking or stream limits.
+HTTP also brings connection-pool behavior, stream limits, retries, and failure handling that the client has to manage.
 
-WebSockets solve the connection overhead issue by establishing a single long-lived TCP socket during the initial upgrade handshake. Once open, data flows in both directions with minimal framing overhead, requiring just a few bytes per frame instead of hundreds of bytes of HTTP headers.
+WebSockets can reduce repeated connection setup and request framing by establishing a long-lived socket during the initial upgrade. Once open, data flows in both directions, but the total cost still depends on the frame format, headers, compression, and connection behavior.
 
 However, raw WebSockets lack semantics. A WebSocket frame is just binary or text data. There is no built-in concept of a URL path, a method, a 200 OK vs a 404 Not Found response, or an async callback waiting for a specific payload.
 
@@ -102,16 +102,16 @@ Network connections drop, servers restart, and mobile clients switch networks. A
 
 ---
 
-## Current Status and Where It Stands
+## The Repository Snapshot Behind This Post
 
-`SujalChoudhari/bxios` is currently in active development on GitHub.
+The repository snapshot described here was still in active development on GitHub.
 
-Milestone 0 is officially complete. Two fundamental foundational PRs are merged into main:
+In that snapshot, Milestone 0 was marked complete, with two foundational PRs merged into main:
 
 - **PR #14 (MessagePack Frame Codec & FrameType Specs)**: Establishes the binary serialization rules, frame structures, header definitions, and frame type identifiers for request, response, error, and ping/pong control frames.
 - **PR #15 (Universal IDriver Abstraction Layer)**: Defines the transport agnostic driver interface (`IDriver`), allowing `bxios` and `bxios-server` to run on top of `uWebSockets.js`, standard browser `WebSocket`, or `ws` without tying core logic to any single engine.
 
-Currently, 11 out of 13 issues remain open on the project issue tracker. The active work items on the board cover:
+At that point, 11 out of 13 issues remained open on the project issue tracker. The work items on the board covered:
 
 - Authentication handshake protocols and token propagation over persistent connections
 - Backpressure management and socket drain handling
@@ -124,4 +124,4 @@ Currently, 11 out of 13 issues remain open on the project issue tracker. The act
 - End-to-end test suite and performance benchmark suite
 - Documentation site and README guides
 
-Building `bxios` comes down to a simple goal: keeping the clean, familiar REST DX developers already know while getting the raw transport performance and low latency of WebSockets.
+The design goal is to keep the familiar REST API developers already know while exploring whether one persistent WebSocket connection can reduce overhead for this access pattern.
