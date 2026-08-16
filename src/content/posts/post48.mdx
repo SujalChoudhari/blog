@@ -24,7 +24,7 @@ But when we narrow the scope to device control and structured data extraction, t
 
 Historically, we solved this with rigid voice command systems. You had to memorize the exact phrase, like "set living room lights to fifty percent." If you deviated from the script, the brittle regular expression parsing failed. Tool-calling models fix this by acting as a flexible translation layer between natural language and an API. The model must select the correct function from a list, extract the relevant arguments from the user's prompt, and format them correctly.
 
-When framed this way, it becomes obvious why you do not need billions of parameters. All the capacity of the model can be dedicated to grounding arguments and selecting tools, rather than storing facts about the world. A 45M parameter model is sufficient because it is solving a routing problem, not an intelligence problem.
+When framed this way, it becomes easier to see why a narrow tool-calling system may not need billions of parameters. All the capacity of the model can be dedicated to grounding arguments and selecting tools, rather than storing facts about the world. My architectural interpretation is that 45M is sufficient for this routing task, not a vendor guarantee about general capability. I see it as a routing problem, not an intelligence problem, because the application defines the available tools and expected schema.
 
 ### The Mechanics of Constrained Execution
 
@@ -71,7 +71,7 @@ The vendor reports a 28 MB peak session RAM figure [1]. Cactus attributes that f
 
 Furthermore, Cactus says attention uses a 256-token sliding window, which bounds the context window described in its material, and that the system prompt and tool declarations are pinned in memory [1].
 
-These optimizations are also part of Cactus Compute's compatibility claims. The vendor reports over 500 tokens per second decode speed on a Raspberry Pi 5, 300 to 1500 tokens per second on listed headsets and phones depending on hardware, and support for devices such as the ESP32-S3 at the reported memory budget [1].
+The vendor reports 500 tokens per second of decode speed on a Raspberry Pi 5 [1]. It reports 400 to 1,500 tokens per second on VR devices such as Meta Quest 3S and Apple Vision Pro, and 300 to 700 tokens per second on sub-$200 phones such as the Samsung A-Series [1]. These are vendor-reported figures for separate device classes, not one directly comparable range. The same vendor page says Needle 2 runs on newer microcontrollers such as the ESP32-S3 with the reported memory budget [1].
 
 Cactus also compares Needle 2 with FunctionGemma 270M, LFM2.5 230M, and Apple FM on its device-use benchmarks. The reported comparison says Needle 2 is 5x to 70x smaller than those baselines, with tradeoffs in accuracy and memory footprint [1]. Those are the vendor's benchmark results, not an independent comparison in this post.
 

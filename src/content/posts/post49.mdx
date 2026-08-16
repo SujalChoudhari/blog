@@ -12,7 +12,7 @@ Tencent recently shared a project called [WorldClaw](https://tencent-hunyuan.git
 
 WorldClaw also makes a distinction worth keeping in view: generating a world is not the same as designing one. A prompt can fill space with terrain, structures, assets, and lighting. Design is the work of deciding the constraints, spatial relationships, causality, continuity, and attention that make those parts matter.
 
-A generated world is a collection of assets arranged by statistical probability. A designed world is a system built on specific human intent.
+My evaluation thesis is that some generated worlds can become collections of assets arranged by statistical probability, while a designed world is a system built on specific human intent.
 
 To evaluate a WorldClaw scene, I would ask questions that the prompt alone does not settle. Why does a route bottleneck at this gate? How long does it take to cross the space? Where do the sightlines break, and what can an approaching player see?
 
@@ -20,11 +20,11 @@ These questions act as constraints. They force the creator to check whether the 
 
 This brings us to causality and continuity. In a designed world, things exist for a specific reason, and they have logical consequences. The architecture reflects the local stone and the environmental weathering because the people who built those structures had to use the materials available to them. The paths naturally carve through valley passes because that is the path of least resistance for travelers.
 
-When you generate a scene, you get a snapshot of a moment. You get the appearance of history without the underlying mechanics of history. A generated world can look weathered, but it does not know why it is weathered. A designed world understands its own history because the creator had to think through the chain of events that led to the current state.
+When you generate a scene, you get a snapshot of a moment. With some current generative systems, you can get the appearance of history without the underlying mechanics of history. A generated scene can look weathered without encoding why it is weathered. A designed world can make its history explicit because the creator has to think through the chain of events that led to the current state.
 
 This systemic understanding becomes even more important when you consider how people interact with a world. In game development, state management is everything. You track variables, inventory, and environmental flags to ensure that the world reacts to the player in a coherent, predictable way. If a player drops an item in a forest, they expect it to be there when they return. If they anger a faction, they expect that faction to remember it. 
 
-Generation can give you the physical space for these interactions, but it cannot design the affordances that make the interactions meaningful. Affordances are the cues in an environment that tell a user what they can do. A heavy stone door is not just a mesh collider; it is a promise that there is something worth finding on the other side. If a generated world is filled with thousands of doors that do not open, the player learns to ignore the environment. The pure volume of the world works against the attention of the player.
+Generation can give you the physical space for these interactions, but by itself it does not settle the affordances that make the interactions meaningful. Affordances are the cues in an environment that tell a user what they can do. A heavy stone door is not just a mesh collider; it is a promise that there is something worth finding on the other side. If a generated world is filled with thousands of doors that do not open, the player learns to ignore the environment. The pure volume of the world works against the attention of the player.
 
 Design requires you to manage that attention. It requires you to select and edit. You do not want the player to look everywhere; you want them to look at the specific things that matter. You use lighting, geometry, and composition to guide them. You strip away the noise so the signal is clear.
 
@@ -34,7 +34,7 @@ The limitation appears when generated output is treated as finished design. A sc
 
 That does not make WorldClaw useless. An explicit, explorable, and editable scene is a useful starting point for prototyping. The design argument is about what happens after generation: testing the layout, editing the scene, and deciding what earns attention.
 
-Generated content is raw material, not finished design. The designer still has to sculpt it.
+I treat generated content as raw material, not finished design. The designer still has to sculpt it.
 
 The real work of worldbuilding happens in the editing phase. It happens when you take the generated volume and start imposing constraints. You delete the unnecessary assets. You adjust the sightlines. You modify the terrain so that it dictates the flow of movement. You ensure that every object in the scene justifies its existence. You add causality.
 
