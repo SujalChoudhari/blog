@@ -1,7 +1,7 @@
 ---
 title: How Code Comes to Life - Designing a Programming Language
 date: 2025-02-02
-description: Explore the process of designing a programming language, from idea to running code. Learn how compiled and interpreted languages differ and the importance of lexical analysis, syntax analysis, semantic analysis, optimization, code generation, and linking.
+description: A beginner-friendly look at how source code can move through tokenization, parsing, compilation, interpretation, and execution.
 tags: ["programming language design", "compiled languages", "interpreted languages", "lexical analysis", "syntax analysis", "semantic analysis", "optimization", "code generation", "linking"]
 categories: ["code"]
 image: "/images/posts/31.jpg"
@@ -10,24 +10,32 @@ author: Sujal Choudhari
 
 ## Designing a Programming Language: How Code Comes to Life
 
-Have you ever wondered how your code becomes actions on a computer? It's a fascinating process! This post explores the key steps in designing a programming language, from the initial idea to the running code.
+How does code such as `x = 5 + 2;` become an action on a computer? There is no single pipeline used by every language. The implementation may compile source code ahead of time, interpret it at runtime, compile it to bytecode for a virtual machine, or combine several of these approaches.
 
-First, you choose between **compiled** and **interpreted** languages. Compiled languages (like C++) translate all code into machine code _before_ running. This makes them fast but requires a separate compilation step. Interpreted languages (like Python) run code line by line. They're more flexible but can be slower. The best choice depends on the language's goals.
+"Compiled" and "interpreted" are useful broad labels, but they are not a complete description of a language. A C++ implementation commonly translates source into machine code before the program runs. A language commonly described as interpreted may parse source, produce bytecode, and execute that bytecode in a runtime. Some runtimes also compile frequently used code while the program is running. The exact choices depend on the language and its implementation.
 
-Next, the computer needs to understand the code. This happens in two steps: **tokenization** and **parsing**.
+Before any of those execution choices, an implementation has to understand the source. Two common early stages are tokenization and parsing.
 
 ## Tokenization: Breaking Down the Code
 
-Imagine splitting a sentence into words. Tokenization does this with code. It breaks the code into meaningful pieces called "tokens." These can be keywords, variables, or operators. For example, `x = 5 + 2;` becomes `x`, `=`, `5`, `+`, `2`, and `;`.
+Tokenization, also called lexical analysis, turns a stream of characters into meaningful pieces called tokens. These tokens can be keywords, names, numbers, operators, or punctuation.
+
+For example, `x = 5 + 2;` can become the tokens `x`, `=`, `5`, `+`, `2`, and `;`. The tokenizer may also record where each token appeared so later error messages can point to the right part of the source.
 
 ## Parsing: Understanding the Structure
 
-Now, we need to understand how the "words" (tokens) fit together. Parsing arranges the tokens according to the language's rules. It checks if the code is correct, like making sure parentheses are used properly. The result is often an **Abstract Syntax Tree (AST)**.
+Parsing takes the tokens and checks how they fit the grammar of the language. It can reject code with a missing parenthesis or an operator in the wrong place. A successful parser often builds an Abstract Syntax Tree, or AST.
+
+An AST keeps the relationships that matter to the program and leaves out details such as extra spaces. For `x = 5 + 2;`, the tree can represent an assignment whose value is an addition expression. The assignment contains `x` on one side and `5 + 2` on the other.
 
 ## Abstract Syntax Tree (AST): The Code's Map
 
-The AST is like a map of the code's structure. It shows how the different parts of the code relate to each other, ignoring details like extra spaces. It's a clear way for the computer to understand the code. Our example's AST would show the assignment of `5 + 2` to `x`.
+The AST is a structured representation that later stages can inspect. An implementation may use it for semantic checks, such as finding an undefined name or checking whether an operation has compatible types. It may then lower the tree into another intermediate form, optimize that form, generate bytecode or machine code, and link compiled pieces when the language needs a separate linking step.
 
-Finally, the AST is **evaluated**. This is where the code actually runs. The language's interpreter or compiler goes through the AST, performing the operations. In our example, `x` becomes 7.
+Those stages are common, not mandatory in exactly that order. A small interpreter might walk the AST directly. Another implementation might turn the AST into bytecode first. A native compiler may continue through optimization, code generation, and linking before execution.
 
-Designing a programming language is hard work. But understanding these basic ideas – **compilation vs. interpretation**, **tokenization**, **parsing**, and **AST evaluation** – helps you see how code becomes real. It's the journey from what we write to what the computer does.
+## Execution: Making the Result Happen
+
+Execution is the stage where the runtime or generated code performs the operations described by the program. In the example, evaluating `5 + 2` produces `7`, and the assignment stores that value in `x`.
+
+The useful beginner model is: source characters become tokens, tokens become a structured representation, and a runtime or generated code executes that representation. Real language implementations add more stages and sometimes combine them, but this model explains the path without pretending every language works the same way.

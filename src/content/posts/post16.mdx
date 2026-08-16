@@ -1,83 +1,51 @@
 ---
-title: "Leveling Up: A Deep Dive into Coding Advanced Game Features"
+title: "Planning and Coding Advanced Game Features"
 date: 2024-07-10
-description: A comprehensive guide to planning and implementing game features.
+description: A high-level guide to planning and implementing game features.
 tags: ["game development", "programming"]
 image: "/images/posts/16.jpg"
 author: Sujal Choudhari
 categories: ["writing"]
 ---
 
-# From Planning to Execution - A Deep Dive into Coding Game Features
+# Planning a Game Feature: A Weapon System
 
-## A Comprehensive Guide to Structured Development and Flexible Implementation
+This is a high-level guide, not a complete weapon system you can run. The example is an online first-person shooter, and the point is to show how to split a larger feature into smaller pieces before writing the implementation.
 
-This blog post is based on my book "How to code any feature", which provides in-depth guidance on tackling various programming challenges. Today, we'll explore the process of coding game features, using a weapon system for an online first-person shooter as our example.
+## Start with the feature's parts
 
-### The Importance of Planning
+A weapon system needs a few separate concerns:
 
-Before diving into coding, it's crucial to plan your feature thoroughly. Let's break down our weapon system into its core components:
+### Weapon properties and classes
 
-#### Weapon Properties and Classes
+Weapons can have properties such as damage, range, ammo, and reload time. Classes can group different kinds of weapons, such as sniper rifles and submachine guns.
 
-- Weapon properties: damage, range, ammo, reload time
-- Weapon classes: sniper rifles, submachine guns, etc.
+### Pickup mechanics
 
-#### Pickup Mechanics
+A player can press `E` to pick up a weapon within a 2-meter radius. The work breaks down into three steps:
 
-- Implement a system where pressing 'E' allows players to pick up weapons within a 2-meter radius. This involves:
+1. Calculate the distance between the player and the weapon.
+2. Remove the weapon from the world.
+3. Add the weapon to the player's inventory.
 
-1. Calculating distance between player and weapon
-2. Removing the weapon from the world
-3. Adding the weapon to the player's inventory
+### Weapon switching
 
-#### Weapon Switching
+A `List` can store the player's weapons and support scrolling through the inventory.
 
-- Use a List data structure to store the player's weapons, allowing for easy scrolling through the inventory.
+### Shooting mechanics
 
-#### Shooting Mechanics
+A raycast can detect what the player hits and call a <em>takeDamage</em> function on the hit player.
 
-- Implement a raycast system to detect hits and call a <em>takeDamage</em> function on the hit player.
+### Dropping weapons
 
-#### Dropping Weapons
+Players can drop weapons manually with a key press. A game can also drop one automatically when its ammo is empty, if that is part of the design.
 
-- Allow players to drop weapons, either automatically when empty or manually with a key press.
+## Move from a plan to code
 
-### Implementing the Weapon System
+Once the parts are clear, write pseudo-code for the classes, methods, and attributes. Start with a basic `Gun` class, then add the interactions that depend on it. This order makes it easier to test one piece before connecting the whole system.
 
-Once the planning is complete, start with pseudo-code to outline classes, methods, and attributes. Begin with the most fundamental elements (like the Gun class) and progressively build up to more complex systems.
+The actual implementation still depends on the game engine, networking model, input system, and rules of the game. This post does not provide that runnable implementation. It gives you a way to outline the work before filling in those details.
 
-### Best Practices
+## Planning is a tool, not a ritual
 
-#### Test Frequently During Development
-
-- Regularly review and improve your methods
-
-#### Break Down Tasks into Manageable Subtasks
-
-- Collaborate effectively by distributing subtasks
-
-#### Balance Between Structured Planning and Flexible Implementation
-
-- Balance between structured planning and flexible implementation
-
-### Adapting Your Approach
-
-While thorough planning is crucial for complex features, experienced developers may sometimes dive directly into coding for simpler tasks. However, it's important to:
-
-#### Regularly Review and Improve Your Methods
-
-- Understand when a more structured approach is necessary
-
-#### Gradually Build Expertise to Find the Right Balance
-
-- Gradually build expertise to find the right balance between fluidity and methodology
-
-<em>
-  Remember, the key to successful feature implementation lies in finding the
-  right balance between thorough planning and adaptable execution. As you gain
-  experience, you'll develop the intuition to know when to plan extensively and
-  when to code more fluidly.
-</em>
-
-For more detailed insights and techniques on coding various features, check out my book "How to code any feature". It offers a comprehensive guide to tackling a wide range of programming challenges across different domains.
+For a complex feature, a short plan can prevent missing pieces. For a small change, an experienced developer may start coding sooner. The useful habit is to review the approach as the feature grows and add structure when the problem starts to spread across too many parts.

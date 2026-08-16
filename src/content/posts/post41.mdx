@@ -10,89 +10,94 @@ author: Sujal Choudhari
 
 I have one rule across my open-source and internal software projects: when a pull request changes system boundaries, data flow, or concurrency, its description should show the design and the local evidence needed to review that risk.
 
-That may mean a high-level design diagram, a low-level design diagram, a class or interface diagram, a sequence diagram, or some smaller combination of them. A documentation change or a 50-line bug fix does not need four diagrams by default. It does need enough explanation and test evidence for the change being made.
+That may mean a high-level design diagram, a low-level design diagram, a class or interface diagram, a sequence diagram, or a smaller combination of them. A documentation change or a 50-line bug fix does not need four diagrams by default. It does need enough explanation and test evidence for the change being made.
 
-Some developers find this strict. They think a 50-line bug fix or a small refactor only needs a two-sentence summary and a green CI badge. But text summaries lie. Or, at best, they gloss over details. A written description lets you hand-wave away race conditions, circular dependencies, and edge cases. A diagram forces you to draw every connection and trace every sequence.
+Some developers find this strict. They think a 50-line bug fix or a small refactor only needs a two-sentence summary and a green CI badge. Text summaries can gloss over race conditions, circular dependencies, and edge cases. A current diagram can make connections and sequences easier to inspect, but it is still a model of the system, not a substitute for reading the code and tests.
 
-When you lead projects and review code from agents or other engineers, part of the job is making system design and contracts visible. Requiring the right diagram for the right change can make review less dependent on guesswork.
+When you lead projects and review code from agents or other engineers, part of the job is making system design and contracts visible. Requiring the right diagram for the right change can reduce guesswork during review.
 
 ---
 
-## Why Text Summaries Fail Code Reviews
+## Why Text Summaries Can Miss Code-Review Risks
 
 When an engineer or an agent opens a pull request, the description usually says something like:
 
 > "Refactored the WebSocket frame parser to handle reconnection automatically and clean up stale request callbacks."
 
-That sounds clear. But it tells you nothing about how the components actually interact under load. 
+That sounds clear, but it tells you little about how the components interact under load.
 
-- Did the socket transport layer acquire a direct dependency on the request router? 
-- What happens to pending callbacks when the socket drops mid-flight? 
+- Did the socket transport layer acquire a direct dependency on the request router?
+- What happens to pending callbacks when the socket drops mid-flight?
 - Does the reconnect handler re-initialize buffers before or after opening the new socket connection?
 
-You cannot answer those questions from a paragraph of prose. To find out, you have to open the diff, jump between five files, trace function calls in your head, and hope you did not miss a subtle async timing issue.
+You cannot answer those questions from that paragraph alone. To find out, you have to open the diff, jump between five files, trace function calls in your head, and check for a subtle async timing issue.
 
-Diagrams remove the guesswork. When the author has to draw the components and trace the execution path visually, architectural flaws jump out immediately.
+A diagram can reduce that guesswork when it is detailed enough and kept in sync with the code. It can also hide problems if it leaves out an important path, so the diagram still needs to be checked against the implementation.
 
 ---
 
 ## The Diagrams That Match the Change
 
-I write these diagrams directly in Mermaid syntax inside the Markdown description when the change warrants them. Each serves a distinct purpose and catches a different class of risk.
+I write these diagrams directly in Mermaid syntax inside the Markdown description when the change warrants them. Each one gives a different view of the risk.
 
 ### High-Level Design (HLD)
-The HLD shows system boundaries, external services, network transport layers, and data sources. 
+
+The HLD shows system boundaries, external services, network transport layers, and data sources.
 
 It answers: *Where does this change fit in the overall system?*
 
-When building **bxios**, my REST-over-WebSocket JavaScript library, the HLD keeps a clear line between the client application interface, the binary MessagePack encoder, the WebSocket connection manager, and the remote server endpoint. If a PR tries to push server routing logic into the client-side transport layer, the HLD highlights the boundary breach before anyone looks at the code diff.
+When building **bxios**, my REST-over-WebSocket JavaScript library, the HLD keeps a clear line between the client application interface, the binary MessagePack encoder, the WebSocket connection manager, and the remote server endpoint. If a PR tries to push server routing logic into the client-side transport layer, the HLD makes that boundary change easy to discuss before anyone looks at the code diff.
 
 ### Low-Level Design (LLD)
+
 The LLD shows internal module layout, file structures, state stores, and error-handling paths.
 
 It answers: *How are the internal pieces organized?*
 
-This catches bad abstractions and creeping complexity early. If a small feature addition requires adding three intermediate utility modules and a global event bus, the LLD makes that over-engineering instantly visible.
+This can expose bad abstractions and growing complexity early. If a small feature addition requires three intermediate utility modules and a global event bus, the LLD gives the reviewer a concrete way to question that design.
 
 ### Class and Interface Diagram
+
 The class diagram shows object structures, interface contracts, method signatures, and structural dependencies.
 
 It answers: *What are the static code relationships?*
 
-This is where you spot circular dependencies and leaky abstractions. During bxios development, an early PR attempted to let the low-level socket transport invoke methods on the high-level request manager directly. The class diagram made the cyclic dependency impossible to hide. We fixed it immediately by introducing a clean event emitter interface instead.
+This is one place to look for circular dependencies and leaky abstractions. During bxios development, an early PR attempted to let the low-level socket transport invoke methods on the high-level request manager directly. The class diagram made the cyclic dependency visible. We fixed it by introducing a clean event emitter interface instead.
 
 ### Sequence Diagram
+
 The sequence diagram shows time order, async messages, payload flows, timeouts, and teardowns.
 
 It answers: *What happens step-by-step during execution?*
 
-Sequence diagrams are the ultimate filter for race conditions. On one occasion, a PR added an auto-reconnect feature to bxios. The written summary claimed everything was handled. But looking at the sequence diagram revealed a glaring flaw: incoming WebSocket frames received during a socket reconnect attempt were dropped because the frame buffer queue was being initialized AFTER the connection opened, not BEFORE. The sequence diagram caught an async timing bug that unit tests missed.
+Sequence diagrams are a useful check for race conditions. On one occasion, a PR added an auto-reconnect feature to bxios. The written summary claimed everything was handled, but the sequence diagram showed a flaw: incoming WebSocket frames received during a socket reconnect attempt were dropped because the frame buffer queue was initialized after the connection opened, not before. The diagram exposed a timing issue that the unit tests had missed. It did not prove that the rest of the implementation was correct.
 
 ---
 
-## Real Local Test and Build Output Is Mandatory
+## Real Local Test and Build Output Is Useful Evidence
 
-Diagrams prove that the design is sound. But you still need proof that the code actually builds and passes tests right now.
+Diagrams describe the intended design. They do not prove that the code builds or passes tests. For that, the PR also needs evidence from the submitted checkout.
 
-A green CI pipeline is good, but waiting 10 minutes for remote GitHub Actions to run on every tiny iteration is slow. More importantly, relying solely on CI encourages bad habits like pushing untested code to see if the remote runner passes.
+A green CI pipeline is useful, but waiting 10 minutes for remote GitHub Actions during every small iteration is slow. Relying only on CI can also encourage pushing untested code just to see whether the remote runner passes.
 
-My rule is to paste the actual commands and terminal output from the submitted checkout into the PR description when the change needs that evidence. The output should be captured from the real run, not copied from a template.
+My rule is to paste the commands and terminal output from the submitted checkout into the PR description when the change needs that evidence. The output should come from the real run, not from a template.
 
-Pasting local execution logs proves three things:
+Pasting local execution logs can show three useful facts, assuming the commands ran from the exact checkout being submitted:
+
 1. The developer or agent ran the code locally before opening the PR.
-2. Type checking (`tsc --noEmit`) completed without silent errors.
-3. The test suite ran against the exact commit submitted.
+2. Type checking with `tsc --noEmit` completed and reported its result.
+3. The test suite ran against the checkout used for the submission.
 
-Showing the command and its output makes it easier to catch "forgot to export the new module" or "broken import path" PRs before merge.
+Showing the command and its output makes it easier to catch a forgotten export or a broken import path before merge. Logs still have limits. They do not cover tests that were never written, and they do not replace a code review.
 
 ---
 
-## Fast Reviews and Better Systems
+## Reviews and Better Systems
 
-Requiring design notes and terminal logs for the changes that need them adds some friction. It can also make review faster.
+Requiring design notes and terminal logs for the changes that need them adds some friction. It can also make review more focused.
 
-When I review a PR, I do not want to spend 30 minutes untangling a complex diff. I open the PR, check the test output to verify execution, review the HLD and LLD for clean architecture, inspect the class diagram for proper coupling, and walk through the sequence diagram for timing issues.
+When I review a PR, I do not want to spend 30 minutes untangling a complex diff. I open the PR, check the test output to confirm what ran, review the HLD and LLD for the stated architecture, inspect the class diagram for coupling, and walk through the sequence diagram for timing issues. Then I read the code and compare the diagrams with the implementation.
 
-If the diagrams make sense and the test logs are clean, reading the code diff takes under three minutes. I click merge with high confidence.
+If the diagrams are current and the test logs are clear, the review may take less time. There is no honest three-minute guarantee, especially for a large or unfamiliar change. The time saved depends on the change, the quality of the evidence, and how much context the reviewer already has.
 
-Code is an implementation detail. Design, structure, and evidence keep a project maintainable over time. If an architecture-changing PR cannot show how its boundaries and execution flow work, it is not ready for main. Smaller changes can use a smaller review packet.
+Code is an implementation detail, but design, structure, and evidence help a project stay maintainable over time. If an architecture-changing PR cannot show how its boundaries and execution flow are meant to work, I do not consider it ready for main. Smaller changes can use a smaller review packet.
