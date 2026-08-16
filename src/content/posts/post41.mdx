@@ -70,7 +70,7 @@ The sequence diagram shows time order, async messages, payload flows, timeouts, 
 
 It answers: *What happens step-by-step during execution?*
 
-Sequence diagrams are a useful check for race conditions. On one occasion, a PR added an auto-reconnect feature to bxios. The written summary claimed everything was handled, but the sequence diagram showed a flaw: incoming WebSocket frames received during a socket reconnect attempt were dropped because the frame buffer queue was initialized after the connection opened, not before. The diagram exposed a timing issue that the unit tests had missed. It did not prove that the rest of the implementation was correct.
+Sequence diagrams are a useful check for race conditions. They can expose timing issues that limited tests miss, such as incoming WebSocket frames arriving during a socket reconnect attempt. A diagram can make ordering risks around frame-buffer initialization and connection setup easier to inspect, but it does not prove that the rest of the implementation is correct.
 
 ---
 
