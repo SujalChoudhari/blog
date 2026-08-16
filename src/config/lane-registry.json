@@ -258,5 +258,10 @@
     "id": "post52",
     "lane": "Writing",
     "reason": "Writing update on the second pass of When the Gods Went Silent and the books that may come after it."
+  },
+  {
+    "id": "post53",
+    "lane": "Technical",
+    "reason": "Engineering opinion on player-hosted authoritative multiplayer architecture."
   }
 ]

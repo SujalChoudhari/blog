@@ -1,0 +1,68 @@
+---
+title: "Mic Drop Should Let One Player Be the Referee"
+date: 2026-08-16
+description: "Why a player-hosted authoritative model may fit Mic Drop better than elaborate clock and shared-state machinery."
+tags: ["multiplayer", "websocket", "game development", "architecture", "systems"]
+categories: ["Engineering"]
+image: "/images/posts/code.jpg"
+author: Sujal Choudhari
+draft: false
+---
+
+I keep coming back to a simpler way to run Mic Drop: let one player host the room, let that host own the authoritative game state, and send the other players snapshots or corrections. For this game, that feels more proportionate than making every client converge on a carefully synchronized view of time and shared state.
+
+This is not a criticism of real-time multiplayer engineering in general. A competitive shooter, a racing game, or a persistent world has good reasons to care about precise ordering, latency, prediction, and server authority. Mic Drop is a different problem. It is a 2 to 8 player party game where a round shows a word, someone buzzes in, that player sings a real song containing it, and the other players vote. The voice conversation happens in whatever voice chat the group already uses. The game does not need to carry the audio stream or simulate a physical world.
+
+That difference should control the architecture.
+
+## The public client already shows where the complexity comes from
+
+The public [Mic Drop](https://www.micdrop.gg/) client is not a toy in the sense of having no networking model. It opens a WebSocket for a room, sends a hello message with a room token, receives snapshot messages, and keeps only snapshots with a newer version number. Those snapshots include `server_time`. The client compares that value with the local clock and keeps a clock skew value. It also uses a phase deadline to drive the countdown shown on screen.
+
+The client exposes phases such as `lobby`, `countdown`, `buzz_open`, `singing`, `round_end`, and `game_over`. It sends discrete actions for starting a game, buzzing, skipping, voting, moving to the next round, playing again, and leaving. It reconnects after a socket closes, with a backoff and some jitter. There is also an explicit host role in the lobby, including a host-only start control.
+
+Those are reasonable pieces for a central real-time service. They also make the design question easy to see. The client needs a common view of the room and a stable countdown, but that does not automatically mean the whole game needs a distributed agreement about time at the same level of importance. A countdown can be approximate on a phone screen while the authority that accepts a buzz remains one place.
+
+A snapshot version tells clients whether they are looking at newer state. It does not require every client to become a peer in deciding what the state should be. A host can still publish versioned snapshots. The clients can still reconnect. The host can still send a new phase deadline when the round changes. The difference is where the decision lives.
+
+## A party game needs an authority, not perfect clocks
+
+If I were choosing the model for this specific game, I would make the host the referee. The host would own the room state, accept or reject actions, advance phases, record the current singer, collect votes, and send the resulting state to everyone else. The other clients would render that state and send requests. They would not decide independently that they had won the buzz race or that a round had ended.
+
+That is still an authoritative multiplayer model. It is just player-hosted instead of dedicated-server-hosted.
+
+The distinction matters because a lot of networking complexity comes from trying to make clients agree before an authority can decide. For Mic Drop, the meaningful actions are small and discrete. A player presses buzz. The host receives it. The host records the first accepted buzz, or applies a tie rule when two arrive close together. A singer skips. The host moves the phase forward. A friend votes that the song counts. The host records the vote and decides when enough votes have arrived.
+
+None of that needs a simulated world ticking at a shared high frequency. The client can display a countdown based on a deadline from the host, but a player does not need to see precisely the same millisecond as everyone else for the room to work. The host can reject a buzz after its own deadline. The screen on one player's device might show 0.1 seconds remaining while another already shows zero. That is a display discrepancy, not necessarily a game-state disagreement.
+
+This is the part I find easy to lose in real-time architecture discussions. A synchronized clock is useful when clients need to make time-sensitive decisions locally. It is less important when one authority can make the decision and tell everyone what happened. I would spend the complexity budget on reliable action delivery, reconnect behavior, and a clear rule for close buzzes before I spent it on making every browser feel like it owns the same clock.
+
+There is also a useful social fact here. Mic Drop is played among friends who are already talking to each other. The vote is not an automated audio classifier judging a singer. People decide whether the song counts. That makes the room's trust boundary visible. The host is already a natural referee in the social version of the game. The software can reflect that instead of pretending the network can remove every judgment call.
+
+## The host model has costs, and I would accept some of them
+
+The largest cost is host disconnect. If the host closes the tab, loses the network, or refreshes at the wrong time, the room can disappear or lose its authority. Host migration is possible, but it is not free. The clients need enough state to elect a replacement, transfer the room cleanly, and avoid accepting old actions after the change. A simpler version can just end the room and let the group create another one.
+
+For a casual game, I would rather have an honest room restart than build a large migration system before the game proves it needs one. The right choice changes if a match lasts an hour, has paid entry, or carries progress that players cannot recreate. In a short karaoke round, losing the current round is irritating. It is not the same class of failure as losing a ranked match or a financial transaction.
+
+Trust is the second cost. A player-hosted authority gives the host more power. A dishonest host could change scores, accept a late buzz, discard a vote, or tell different clients different stories. The public client already exposes enough room actions and state for the host role to be meaningful, but the bundle does not prove that the current host is the simulation authority. That implementation detail is exactly why I would describe this as a model I would choose, not as a claim about what Mic Drop currently does.
+
+For a private group, this trust problem is manageable because cheating mostly ruins the cheater's own evening. For a public competitive game, it is a deal breaker. A host cannot be the final judge when the players are strangers, rankings matter, or rewards are attached to the result. The authority then needs to sit somewhere the players cannot rewrite.
+
+Fairness around the buzz is the harder technical question. If the host decides by packet arrival, a player with a worse route to the host may lose even when both people pressed the button at almost the same time. Clock synchronization does not magically solve that. Client timestamps can make the result look fairer, but they also give clients an opportunity to lie about when they acted. A dedicated server has the same basic latency problem, though it gives the operator a consistent place to measure it and a stronger trust boundary.
+
+For Mic Drop, I would make the rule explicit instead of hiding the choice behind a complicated timing system. The host accepts the first buzz it receives during the open phase. If the game wants to soften close calls, it can treat buzzes inside a small window as simultaneous or use a deterministic tie break. That will not make the result perfectly fair. It will make the result understandable, testable, and appropriate for a party game where the room can also settle an argument out loud.
+
+Connectivity is another real objection. Player hosting does not remove NAT traversal, firewalls, unstable home networks, or mobile browsers changing networks. Direct peer connections may need a relay or a TURN-style fallback. A room code is convenient for players, but it does not make every network reachable. If every player still has to connect through a central relay, the difference between player-hosted authority and a small central game server may become less attractive.
+
+That is where I would be practical. If the transport already requires a service for discovery, authentication, relaying, and reconnects, a dedicated authoritative process may be simpler to operate than moving the state authority into one player's session. Player hosting is most compelling when it meaningfully reduces server responsibility, not when it keeps a central service while adding host failure on top.
+
+## Dedicated servers earn their complexity in different games
+
+I am not arguing that dedicated servers are bad. They are the right answer when the game needs an authority that players cannot influence, persistent rooms that survive individual disconnects, stronger anti-cheat guarantees, moderation, matchmaking, or a fair competitive result. They also make sense when the audience is large enough that one player's upload speed and home router should not become part of the service's reliability story.
+
+A dedicated server is especially justified when the server holds secrets that clients must not see, when the game has a serious economy, or when the operator needs logs that can settle disputes. It gives the owner one place to patch, monitor, rate limit, and reason about abuse. Those are good reasons to pay the infrastructure cost.
+
+I just do not see all of those requirements in the basic Mic Drop shape. The game has a small room, a few phases, short actions, and a human vote. Its most important real-time interaction is a race to press a button, followed by someone singing to friends. I would rather give the room one clear referee than make every participant participate in a distributed timing exercise that the game does not otherwise need.
+
+The best architecture is not the one with the most serious multiplayer vocabulary. It is the one that gives this particular game a clear authority, an acceptable failure mode, and rules its players can understand. For Mic Drop, a player-hosted authoritative room seems like the right place to start, with dedicated servers reserved for the trust, fairness, and operational demands that would actually justify them.
