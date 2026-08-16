@@ -16,17 +16,17 @@ Ever found yourself lost in a maze of spaghetti code? We've all been there. Code
 
 Let's begin with the basics. At its heart, good code organization is nothing but modularity, separation of concerns, and consistency.
 
-Ever played LEGO? Me neither. **Modularity** is like building with LEGO blocks: each piece has a purpose and can be easily combined or replaced. You want your code to be exactly like that. When you write modular code, you're creating self-contained units that can be developed, tested, and modified independently.
+Ever played LEGO? Me neither. **Modularity** is like building with LEGO blocks: each piece has a purpose and can be easily combined or replaced. You want your code to be exactly like that. When you write modular code, you're aiming for self-contained units that can be easier to test or replace. That can make work easier to separate, but it does not guarantee independent development.
 
-**Separation of concerns** is like keeping your workspace organized. Do you pay taxes or have friends? Me neither. Separation of concerns is like these two things; you don't want to mix them up. The same goes for code. Keep your user interface logic separate from your business logic, and your data processing separate from your storage operations. Learn. Learn from scam sites. Same backend, different frontend. This makes your code cleaner and more manageable; when something breaks, you'll know exactly where to look.
+**Separation of concerns** is like keeping your workspace organized. Do you pay taxes or have friends? Me neither. Separation of concerns is like these two things; you don't want to mix them up. The same goes for code. Keep your user interface logic separate from your business logic, and your data processing separate from your storage operations. Learn. Learn from scam sites. Same backend, different frontend. This makes your code cleaner and more manageable; when something breaks, it can narrow where to look.
 
 **Consistency** might seem obvious, but it's often overlooked. Do you regularly go to college? I do actually. You might have motivation to organize, but sometimes the motivation fades away. _Consistency is key. To the lock of motivation._ To achieve things that are boring, you need consistency.
 
 Here is what I do. I use the same naming conventions, the same structure, and the same formatting across my codebase. And even other projects too. It becomes muscle memory. Things automatically happen. Subconsciously.
 
-Here are some things I do for OOP: I give the `m_` prefix to member variables, `p_` to protected variables, while public ones are `camelCase` and static ones are `UPPER_SNAKE_CASE`. I also add an `_` prefix to variables declared in the function itself.
+Here are some naming conventions I use for OOP projects. These are personal or team conventions, not universal OOP rules: I give the `m_` prefix to member variables, `p_` to protected variables, while public ones are `camelCase` and static ones are `UPPER_SNAKE_CASE`. I also add an `_` prefix to variables declared in the function itself.
 
-Oops! There are dynamically typed languages too. Here I add a `<type>_` prefix to variables like `float_gender` or `int_name` to make it easier to understand the type of variable.
+Oops! There are dynamically typed languages too. Here I use a `<type>_` prefix for variables like `float_gender` or `int_name` as a personal or team convention to make the intended type easier to read. It does not enforce the runtime type.
 
 ### Embracing Modular Programming
 
@@ -88,8 +88,8 @@ It's about creating a logical home for every piece of your project. A file is a 
 
 ### Smart Documentation
 
-Here's a counterintuitive tip: **don't document your code too early**. Wait until your code is stable and tested. Why? Because premature documentation often becomes outdated as your code evolves.  
-Instead. Focus on writing self-explanatory code first. When you do document, focus on the why and when, not the what. What part of the code is the code itself. Here's an example of effective documentation:
+Here's a workflow preference: I don't document my code too early. I usually wait until the code is stable and tested because premature documentation can become outdated as the code evolves.
+Instead. I focus on writing code that explains itself first, when that is practical. When I do document, I focus on the why and when, not the what. What part of the code is the code itself. Here's an example of effective documentation:
 
 ```python
 def calculate_discount(price: float, discount_rate: float) -> float:
@@ -108,7 +108,7 @@ See how the docstring states the function's purpose, while the validation makes 
 ### The Power of Package Management
 
 Think of packages as pre-packed solutions to common problems. You wrote code, you made files, you made folders. Now you have packages.  
-Isolated components, technically identified with a namespace. Not everything can be a package. Not every app is the same, not every project is the same.
+In Python, a distribution package is what you install, while an import package is what your code imports. They can be related, but they are not simply the same thing as a namespace. Not everything can be a package. Not every app is the same, not every project is the same.
 When you identify reusable components in your code, such as authentication systems or data validation utilities, consider packaging them. This approach not only saves time but also promotes code reuse and better organization.
 
 ### Wrapping Up

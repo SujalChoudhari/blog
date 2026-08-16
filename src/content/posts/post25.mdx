@@ -39,11 +39,11 @@ In my case, I created a custom bootloader that the BIOS loads from the first sec
 
 ### Kernel
 
-The kernel is the core of the operating system. It manages system resources, handles hardware interactions, and provides essential services to other software. My kernel, initially very basic, grew to include features like memory management, device drivers, and a simple file system.
+The kernel is the core of the operating system. It manages system resources, handles hardware interactions, and provides essential services to other software. My kernel, initially very basic, grew to include work on memory management and device drivers.
 
 ## Early Achievements
 
-In the initial stages of the project, which I originally called SmallOS, I hit several important milestones:
+Before starting MoldOS, I worked on an earlier project called SmallOS. Some of its milestones were:
 
 1.  **FAT12 Support**: I successfully added FAT12 support to the bootloader, enabling it to locate and run the kernel. FAT12 is a simple file system often used in bootloaders due to its simplicity. While FAT32 is more common for larger drives, FAT12 was perfect for my initial needs.
 2.  **"Hello World"**: Getting the kernel to load and display a simple "Hello World" message was a significant accomplishment. This involved setting up a basic VGA text mode driver to write to the screen buffer, which has a resolution of 80x25 characters.
@@ -60,13 +60,12 @@ As the project evolved, I made some significant changes and additions:
 2.  **Interrupt Descriptor Table (IDT)**: I successfully implemented the IDT, a crucial step in handling system errors and making the OS more stable and reliable. The IDT is a data structure that associates each interrupt or exception with a handler function. When an interrupt occurs, the CPU uses the IDT to find and execute the appropriate handler.
 3.  **Keyboard Input**: I added functionality to handle keyboard inputs, allowing keypresses to display on the screen. This involved writing a driver for the keyboard controller and setting up the appropriate interrupt handler.
 4.  **Paging**: I implemented paging for virtual memory. Paging maps virtual addresses to physical addresses through page tables; it is separate from the processor's L1, L2, and L3 caches. Those caches are hardware mechanisms that keep recently used data close to the CPU, while paging is an operating-system and memory-management mechanism.
-5.  **Full File System Support**: This was a major milestone, opening up new possibilities for file management within MoldOS.
 
 ## Blending Passions: Game Development in MoldOS
 
-To keep things interesting and merge my love for game development with OS creation, I've started working on a dungeon crawler game specifically for MoldOS. This project within a project has been incredibly motivating and helps showcase the capabilities of my custom OS.
+To keep things interesting and merge my love for game development with OS creation, I've started working on a maze game specifically for MoldOS. This project within a project has been incredibly motivating and helps showcase the capabilities of my custom OS.
 
-Developing a game for MoldOS involves writing custom graphics drivers to manipulate the VGA buffer directly. The standard text mode provides an 80x25 character grid, but with some tweaking, I've managed to create a more graphical environment for the game.
+The game is a text-mode maze interface rendered through the VGA text buffer, using the standard 80x25 character grid.
 
 ## Learning and Growth
 
@@ -78,7 +77,7 @@ Moreover, I've experienced significant personal growth as a developer. The chall
 
 At the time of writing, the next areas I planned to explore included:
 
-1.  Implementing a more advanced file system, possibly moving from FAT12 to a custom file system
+1.  Exploring a more advanced file system
 2.  Developing a basic networking stack
 3.  Creating a simple graphical user interface
 4.  Expanding the capabilities of my in-OS game engine

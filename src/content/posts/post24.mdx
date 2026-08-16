@@ -31,17 +31,18 @@ The default tmux prefix is `Ctrl+b`. Press it before most of the shortcuts below
 
 ### Pane management
 
-- `Prefix %`: Splits the current pane vertically and creates a pane to the right.
-- `Prefix "`: Splits the current pane horizontally and creates a pane below it.
+- `Prefix %`: Splits the current pane into left and right panes, with the new pane on the right.
+- `Prefix "`: Splits the current pane into panes above and below, with the new pane below it.
 - `Prefix arrow key`: Moves between panes in the direction of the arrow key.
 - `Prefix z`: Toggles zoom on the current pane.
 
 ### Copy mode
 
 - `Prefix [`: Enters copy mode so you can inspect terminal history and select text.
-- `Space` (in copy mode): Starts text selection.
-- `Enter` (in copy mode): Copies the selected text to the tmux clipboard.
-- `Prefix ]`: Pastes text from the tmux clipboard.
+- The Space and Enter bindings below depend on whether copy mode uses vi or emacs keys.
+- `Space` (in vi-style copy mode): Starts text selection.
+- `Enter` (in vi-style copy mode): Copies the selected text to the tmux paste buffer.
+- `Prefix ]`: Pastes text from the tmux paste buffer.
 
 ### Miscellaneous
 
@@ -74,10 +75,10 @@ A `.tmux.conf` file can change the prefix, pane shortcuts, and mouse behavior. T
     bind -n M-Up select-pane -U
     bind -n M-Down select-pane -D
 
-    # Don't rename windows automatically
+    # Prevent programs from changing window names via terminal escape sequences
     set-option -g allow-rename off
 
-It enables mouse support, changes the prefix from `Ctrl+b` to `Ctrl+a`, remaps pane splitting to `|` and `-`, adds Alt+Arrow pane switching, and prevents automatic window renaming.
+It enables mouse support, changes the prefix from `Ctrl+b` to `Ctrl+a`, remaps pane splitting to `|` and `-`, adds Alt+Arrow pane switching, and prevents programs from changing the window name through terminal escape sequences. It does not prevent every kind of automatic renaming.
 
 ## Styling Your Tmux
 
