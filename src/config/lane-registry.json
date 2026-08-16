@@ -253,5 +253,10 @@
     "id": "post51",
     "lane": "Technical",
     "reason": "Mole architecture, MCP workflow, evidence verification, and local-data privacy boundary."
+  },
+  {
+    "id": "post52",
+    "lane": "Writing",
+    "reason": "Writing update on the second pass of When the Gods Went Silent and the books that may come after it."
   }
 ]
