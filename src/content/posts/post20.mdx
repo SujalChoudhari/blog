@@ -10,9 +10,9 @@ author: Sujal Choudhari
 
 # Essential C++ data structures for competitive programming
 
-## What is the C++ STL?
+## What is the C++ standard library (often called the STL)?
 
-The C++ Standard Template Library (STL) provides containers, algorithms, and iterators. It gives you standard implementations of common data structures, so you do not have to write each one from scratch. The STL does not remove the need to understand the tradeoffs: container choice affects ordering, lookup, memory use, and available operations.
+The C++ standard library (often called the STL) provides containers, algorithms, and iterators. It gives you standard implementations of common data structures, so you do not have to write each one from scratch. The STL does not remove the need to understand the tradeoffs: container choice affects ordering, lookup, memory use, and available operations.
 
 ## STL containers and common functions
 
@@ -26,7 +26,7 @@ An `unordered_set` stores unique elements without maintaining a sorted order. Lo
 
 ### 2. `vector`
 
-A `vector` is a dynamic array that can resize itself when elements are added or removed. It provides random access to elements. Common functions include:
+A `vector` is a dynamic array whose size changes automatically when elements are added or removed. Adding elements can increase its capacity, while erasing elements changes the size but does not necessarily reduce the capacity. It provides random access to elements. Common functions include:
 
 - `push_back(value)`: Adds an element to the end of the vector.
 - `pop_back()`: Removes the last element of the vector.
