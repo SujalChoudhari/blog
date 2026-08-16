@@ -28,7 +28,7 @@ Before diving into the achievements, let me briefly explain some fundamental con
 
 ### BIOS and Bootloader
 
-The BIOS (Basic Input/Output System) is the first software that runs when a computer starts. It performs some initial checks and then looks for a bootloader on the storage devices. The bootloader is a small program that loads the operating system kernel into memory.
+The BIOS (Basic Input/Output System) is firmware that performs initial hardware checks and starts the boot process. In a BIOS-based boot path, firmware loads boot code from a boot sector or another configured boot location. A bootloader then loads the operating system kernel into memory.
 
 In my case, I created a custom bootloader that the BIOS loads from the first sector of the disk. This bootloader is responsible for:
 
@@ -59,17 +59,14 @@ As the project evolved, I made some significant changes and additions:
 1.  **Rust Migration**: I decided to rebuild the OS using Rust, a language known for its safety and performance. While challenging, this switch has been an exciting learning opportunity.
 2.  **Interrupt Descriptor Table (IDT)**: I successfully implemented the IDT, a crucial step in handling system errors and making the OS more stable and reliable. The IDT is a data structure that associates each interrupt or exception with a handler function. When an interrupt occurs, the CPU uses the IDT to find and execute the appropriate handler.
 3.  **Keyboard Input**: I added functionality to handle keyboard inputs, allowing keypresses to display on the screen. This involved writing a driver for the keyboard controller and setting up the appropriate interrupt handler.
-4.  **Pagination**: I implemented pagination with L1, L2, and L3 caches, further optimizing the system's performance. Pagination allows the OS to use virtual memory, mapping virtual addresses to physical addresses. The multi-level cache system works like this:
-    - L1 Cache: Smallest and fastest, typically built into the CPU core
-    - L2 Cache: Larger but slightly slower, often shared between CPU cores
-    - L3 Cache: Largest but slowest of the three, shared among all coresThis caching system significantly speeds up memory access by keeping frequently used data close to the CPU.
+4.  **Paging**: I implemented paging for virtual memory. Paging maps virtual addresses to physical addresses through page tables; it is separate from the processor's L1, L2, and L3 caches. Those caches are hardware mechanisms that keep recently used data close to the CPU, while paging is an operating-system and memory-management mechanism.
 5.  **Full File System Support**: This was a major milestone, opening up new possibilities for file management within MoldOS.
 
 ## Blending Passions: Game Development in MoldOS
 
 To keep things interesting and merge my love for game development with OS creation, I've started working on a dungeon crawler game specifically for MoldOS. This project within a project has been incredibly motivating and helps showcase the capabilities of my custom OS.
 
-Developing a game for MoldOS involves writing custom graphics drivers to manipulate the VGA buffer directly. The standard text mode provides a 80x25 character grid, but with some tweaking, I've managed to create a more graphical environment for the game.
+Developing a game for MoldOS involves writing custom graphics drivers to manipulate the VGA buffer directly. The standard text mode provides an 80x25 character grid, but with some tweaking, I've managed to create a more graphical environment for the game.
 
 ## Learning and Growth
 
@@ -79,7 +76,7 @@ Moreover, I've experienced significant personal growth as a developer. The chall
 
 ## Looking Ahead
 
-As I continue to develop MoldOS, I'm filled with excitement for what's to come. Each new feature and optimization brings me closer to my goal of creating a fully functional, unique operating system. Some areas I'm looking to explore include:
+At the time of writing, the next areas I planned to explore included:
 
 1.  Implementing a more advanced file system, possibly moving from FAT12 to a custom file system
 2.  Developing a basic networking stack

@@ -1,14 +1,14 @@
 ---
-title: "Rebuilding Email for the Modern Web: Why I Killed SMTP"
+title: "Rebuilding Email for the Modern Web: An HTTPS-First Prototype"
 date: 2025-08-08
-description: "A deep dive into why traditional email protocols are obsolete and how I rebuilt the entire system from scratch using modern web standards like HTTPS and JSON. This isn't a thought experiment; it's a working blueprint for a simpler, more secure future for our most essential communication tool."
+description: "A technical look at an HTTPS-first email prototype, its JSON API, and the protocol, identity, delivery, and security questions that remain before such a design could interoperate with email."
 tags: ["email", "https-", "api-design", "smtp", "imap", "decentralization", "fastapi", "react", "nextjs", "full-stack", "software-architecture", "security"]
 categories: ["deep-dive", "tech"]
 author: "Sujal Choudhari"
 image: "/images/posts/34.jpg"
 ---
 
-# Rebuilding Email for the Modern Web: Why I Killed SMTP
+# Rebuilding Email for the Modern Web: An HTTPS-First Prototype
 
 Email is a dinosaur.
 
@@ -16,11 +16,10 @@ Let's just get that out of the way.
 It's a magnificent, resilient, and shockingly useful dinosaur that somehow survived the meteor.
 But it's still a dinosaur.
 
-The protocols that make it work—SMTP, POP3, IMAP—were designed by geniuses in an era of dial-up modems and text-only terminals.
-They were built for a different internet.
-A smaller, more trusting, and infinitely simpler internet.
+SMTP, POP3, and IMAP were designed for a different internet, with distinct roles for transferring and accessing messages.
+They remain widely interoperable, but they also bring operational complexity.
 
-For months, I’ve been haunted by a question.
+For months, I've been haunted by a question.
 > What if we built email today?
 > From scratch.
 > Using the tools we have now.
@@ -29,22 +28,20 @@ This question took over.
 It stopped being a hypothetical and became an obsession.
 I tore down the old structure in my mind and started building.
 
-The result is a complete, full-stack, end-to-end mail system.
+The result is a full-stack prototype for a web-native mail system.
 A slick React/Next.js frontend.
 A powerful Python FastAPI backend.
 
-And here’s the kicker.
+And here's the kicker.
 There is no SMTP server.
 No IMAP daemon.
 No POP3 listener.
 
-The entire system runs on one thing.
-The same thing that powers nearly every modern web application on the planet.
+The prototype uses one main transport.
 **HTTPS.**
 
-This is the story of that project.
-It’s a manifesto for why the old way is broken.
-And why the solution has been staring us in the face all along.
+This is the story of that prototype.
+It is an argument for exploring a web-native design, not a claim that the prototype replaces the open email ecosystem.
 
 ---
 
@@ -53,55 +50,28 @@ And why the solution has been staring us in the face all along.
 To build something new, you have to respect the old.
 Even if you plan on tearing it down.
 
-Traditional email is a three-headed beast.
+Traditional email uses several protocols with different jobs.
 
 **SMTP (Simple Mail Transfer Protocol)**
-This is the postman.
-Its only job is to move your email from your server to someone else's server.
-It’s a text-based conversation.
+This is the transfer protocol.
+Its job is to move mail from one server to another through a text-based command and reply exchange.
 `HELO`
 `MAIL FROM:`
 `RCPT TO:`
 `DATA`
 `QUIT`
 Simple.
-But it’s also, by default, like sending a postcard.
-Anyone on the path can read it.
-Sure, we bolted on security with STARTTLS, but it’s still a patch on a fundamentally insecure design.
-It’s a relic.
+SMTP can be used with TLS, but SMTP and TLS solve different problems. TLS can protect a connection hop; it does not by itself provide end-to-end encryption for the message. The IETF's [RFC 8314](https://www.rfc-editor.org/rfc/rfc8314) recommends TLS for email submission and access while noting that those recommendations are not a substitute for end-to-end encryption.
 
 **POP3 (Post Office Protocol)**
-This is your grandma’s mailbox.
-You check it once a day.
-You take all the letters out.
-You take them home.
-The mailbox is now empty.
-If you want to read those letters at your office, too bad.
-They’re at home.
-
-In a world where I live on my laptop, my phone, and my tablet, POP3 is actively hostile to my sanity.
-It’s a one-way street.
-It’s broken.
+POP3 is a retrieval protocol for accessing messages held in a server maildrop. A client often downloads messages and may delete them, but the protocol is not designed for rich server-side mailbox synchronization. That is why it does not provide the same multi-device model as IMAP.
 
 **IMAP (Internet Message Access Protocol)**
 This was the fix.
 The clever one.
-IMAP syncs your mailbox.
-Read an email on your phone, and it’s marked as read on your laptop.
-Your mail lives on the server, and you access it from anywhere.
+IMAP provides server-side mailbox access and synchronization, so a message can keep state across clients. It is stateful and operationally more involved than a single JSON endpoint, but that complexity supports mailbox semantics rather than being an accidental extra.
 
-It works.
-It’s what most of us use.
-But it’s also *insanely* complex.
-It’s a stateful, chatty, high-maintenance protocol that needs its own dedicated server process, its own port, its own universe of configuration hell.
-
-Here’s the core problem.
-> It's three different things.
-> Three different servers.
-> Three different ports.
-> Three different headaches.
-
-It’s a tangled, messy, and unnecessarily complicated system.
+The core issue is not literally three different servers. SMTP, POP3, and IMAP are separate protocol roles, and a deployment may combine them or expose them through different services. Transfer, submission, and mailbox access still need clear boundaries, queues, retries, authentication, and abuse controls.
 
 ![old mess](/images/posts/server_room.jpg)
 
@@ -109,7 +79,7 @@ It’s a tangled, messy, and unnecessarily complicated system.
 
 ### The Lightbulb Moment: A Lesson from the Fediverse
 
-Before I show you the new way, let’s talk about Mastodon.
+Before I show you the new way, let's talk about Mastodon.
 Mastodon is a decentralized social network.
 Thousands of independent servers, all talking to each other.
 A user on `mastodon.social` can follow a user on `tech.hub`.
@@ -117,36 +87,30 @@ Seamlessly.
 
 How?
 Does it use some secret, complex "Social Media Transfer Protocol"?
-No.
-It uses ActivityPub.
+No. It uses [ActivityPub](https://www.w3.org/TR/activitypub/).
 
-And what’s ActivityPub?
-It’s a fancy name for sending structured **JSON** objects over **HTTPS**.
-That’s it.
-That’s the whole trick.
+ActivityPub uses ActivityStreams 2.0 data and defines both a client-to-server API and a federated server-to-server API. HTTP carries the requests, but the specification also defines actors, inboxes, outboxes, object discovery, and delivery behavior. Authentication and signature choices are part of the federation security problem; JSON over HTTPS is not the whole protocol.
 
-When you post a "toot," your server sends a `POST` request to your followers' servers.
-The body of that request is a JSON object describing your post.
+When an actor publishes an activity, a server delivers it to recipients' inboxes according to the federation rules. The body can be a JSON representation of an ActivityStreams object.
 
 This was the revelation.
-The Fediverse solved decentralized communication without reinventing the wheel.
-They just used the web's native language.
-They used the tool that was already perfect for the job.
+The Fediverse shows one way to build decentralized communication on web protocols, with semantics beyond the HTTP request itself.
+It uses existing web mechanisms while still defining protocol-specific behavior.
 
-> If a global, decentralized social network can run on simple HTTPS requests...
-> Why on earth can't email?
+> If a decentralized social network can use HTTP requests for federation...
+> Why not explore a similar transport for a bounded messaging prototype?
 
 ---
 
 ### The Blueprint: My HTTPS-First Mail System
 
 So I built it.
-I took the core idea from ActivityPub and applied it to email.
+I took the idea of using web-native requests and applied it to a bounded email prototype.
 The entire architecture rests on two pillars.
 **JSON** for the data.
 **HTTPS** for the transport.
 
-Here’s how an email lives and breathes in my system.
+Here's how an email lives and breathes in my system.
 
 #### The Data: A Clean, Strict `EmailModel`
 
@@ -170,12 +134,12 @@ Defined in my FastAPI backend with Pydantic, it looks something like this:
   "date": "2025-03-15T10:00:00Z"
 }
 ```
-This is our universal language.
+This is the prototype's internal message shape, not an interoperable email format.
 The frontend sends it.
 The backend understands it.
-It's simple, extensible, and sane.
+It is simple and extensible for this experiment, but a real interoperable format would need explicit versioning, validation, identity, and attachment semantics.
 
-#### The Send-Off: Killing SMTP with a POST Request
+#### The Send-Off: An API POST Request
 
 This is the heart of it all.
 When you click "Send" in my React app...
@@ -183,14 +147,13 @@ No connection to port 25.
 No `HELO` greeting.
 No text-based dance.
 
-Just one, single, beautiful API call.
+The prototype can make one API call for its local send path.
 `POST /email/send`
 
 The body of that request is the `EmailModel` JSON object.
-Authentication is handled with a standard `Authorization: Bearer <TOKEN>` header.
-It's clean.
-It's secure.
-It's how the modern web works.
+The sketch uses a bearer token placeholder: `Authorization: Bearer [token]`. That authenticates an API request only if the server validates it; server-to-server identity, key rotation, authorization, and replay protection still need a design.
+It is clean to prototype.
+It is not automatically secure just because it uses HTTPS.
 
 ![old mess](/images/posts/seamless_comm.jpg)
 
@@ -199,26 +162,27 @@ For each recipient, it looks at their `host`.
 And it makes its own HTTPS request.
 
 ```python
-# A look inside my email_service.py
+import requests
+
+# A simplified look inside my email_service.py
 def send_email_to_server(email_data):
     recipient_host = email_data["to"][0]["host"]
     url = f"https://{recipient_host}/email/receive"
     
-    # This is the "delivery."
-    # A standard, secure, web-native POST request.
-    requests.post(url, json=email_data)
+    # Simplified: a real implementation would handle every recipient.
+    # It would also need authentication, timeouts, retries,
+    # idempotency, and durable failure handling.
+    requests.post(url, json=email_data, timeout=10)
 ```
 The server-to-server transfer is no longer a cryptic chat.
 It's a modern API call.
 
 #### The Arrival: A Smarter Mailbox
 
-The recipient's server is listening.
-Not on some weird port.
-It's just listening for web traffic.
-It has one endpoint: `/email/receive`
+In the prototype, the recipient's server exposes an HTTPS endpoint such as `/email/receive`.
+HTTPS provides transport; it does not by itself prove that the sender is authorized or that the message will be accepted exactly once.
 
-When the POST request from the sender's server arrives, it does a few simple things.
+When the POST request from the sender's server arrives, the prototype does a few simple things.
 1.  **Validates the JSON** against its own `EmailModel`.
 2.  Checks if the recipient is a local user.
 3.  Adds its own metadata, like a `deliveredAt` timestamp.
@@ -227,7 +191,7 @@ When the POST request from the sender's server arrives, it does a few simple thi
 
 Done.
 The email is delivered.
-The entire journey was secure, predictable, and handled with the same tools I'd use to build any other web service.
+A production design would also need an explicit trust model, recipient discovery, replay protection, queueing, retries, idempotency, spam controls, and a delivery guarantee. This path is easy to explain, but it is only a prototype flow. HTTPS alone does not establish end-to-end security, successful delivery, or interoperability.
 
 ---
 
@@ -236,27 +200,27 @@ The entire journey was secure, predictable, and handled with the same tools I'd 
 This isn't just about replacing old tech with new tech.
 This is about unlocking capabilities that were nightmares to implement before.
 
-#### True End-to-End Encryption Becomes Trivial
+#### End-to-End Encryption Is a Separate Design
 
 The `body` of my email is just a string.
-What if, before sending, the client encrypts it?
+Before sending, a client could encrypt it.
 
 The JSON payload would look like this:
 ```json
 {
   "body": null,
   "encryptedBody": "U2FsdGVkX1+aBc...",
-  "encryptionAlgorithm": "AES-256-GCM"
+  "encryptionAlgorithm": "AES-256-GCM",
+  "nonce": "..."
 }
 ```
-The server is now completely blind.
-It knows who sent the email and who it’s for.
-But the content is meaningless gibberish.
-It stores the gibberish. It delivers the gibberish.
+This payload is incomplete: authenticated encryption also requires a nonce or IV, and users need an authenticated key-distribution scheme. Without those pieces, the field does not provide end-to-end encryption.
+The server would not need to see plaintext, assuming the clients authenticate keys correctly.
+It could store and deliver the ciphertext without being able to read it.
 
-Only the recipient's client, with the correct private key, can unlock the message.
-> True, zero-knowledge, end-to-end encryption is no longer a hack.
-> It's a natural feature of the architecture.
+Only clients holding the right keys could decrypt the message.
+> End-to-end encryption is possible in this architecture, but it is not automatic.
+> Key distribution and authentication are part of the architecture too.
 
 ![transparent encryption](/images/posts/transparent.jpg)
 
@@ -283,40 +247,38 @@ A calendar invite:
   "startTime": "2025-03-18T14:00:00Z"
 }
 ```
-The *exact same channel*—the same `/send` and `/receive` endpoints—can handle it all.
+The same transport could carry different application messages if both sides agree on schemas, permissions, delivery semantics, and versioning.
 Email.
 Chat.
 Calendars.
 File transfers.
 
-We eliminate the need for XMPP, CalDAV, and a dozen other single-purpose protocols.
-We get one unified, extensible, decentralized communication protocol for the modern web.
-The simplification is staggering.
+That could reduce duplicated transport code inside one ecosystem, but it would not eliminate XMPP, CalDAV, or other protocols for existing clients and interoperability.
+It would be a new, bounded protocol rather than a universal replacement for the existing ones.
 
 ---
 
-### Why a POST Request Is Just Better
+### What This Prototype Makes Easier
 
-Let’s put it head-to-head.
-My `POST /send` vs. the old SMTP conversation.
+The comparison below is between this prototype's API path and one SMTP submission path. It is not a proof that the two systems solve the same interoperability problem.
 
 **Authentication:**
-- **Me:** A standard `Authorization: Bearer` header with a JWT. Secure, stateless, and a solved problem.
-- **SMTP:** `AUTH PLAIN`. A bolted-on extension that sends credentials back and forth. Clunky.
+- **Prototype:** A bearer token can authenticate an API request, but the design still needs token storage, rotation, authorization, and server-to-server authentication.
+- **SMTP:** SMTP has authentication extensions and can be used with TLS; the exact security depends on the deployment and the negotiated mechanisms.
 
 **Data:**
-- **Me:** Rich, validated JSON. Structured from the start.
-- **SMTP:** Plain text that needs complex, buggy MIME encoding for anything beyond ASCII.
+- **Prototype:** JSON gives the API a schema for this experiment.
+- **SMTP:** SMTP transfers mail; message structure and attachments are handled by related message formats such as MIME. It is not accurate to compare SMTP itself with a JSON document.
 
 **Error Handling:**
-- **Me:** `404 Not Found` if the user doesn't exist. `403 Forbidden` if you're not allowed. A meaningful JSON error body.
-- **SMTP:** `550 No such user here`. A cryptic 3-digit code from the 1980s.
+- **Prototype:** HTTP status codes can describe an API request, but durable delivery still requires queueing, retry, duplicate handling, and clear failure semantics.
+- **SMTP:** SMTP uses standardized reply codes, and capable implementations are expected to queue and retry messages when delivery cannot complete.
 
 **Infrastructure:**
-- **Me:** HTTPS on port 443. The lifeblood of the web. It's *always* open.
-- **SMTP:** Port 25. Blocked by most ISPs to fight spam, forcing workarounds and configuration nightmares.
+- **Prototype:** HTTPS commonly uses port 443, but deployment still requires certificates, server authentication, recipient discovery, and reachable endpoints.
+- **SMTP:** SMTP deployments use different service roles and ports; port 25 filtering varies by network and provider, and SMTP's relay model is what enables interoperability.
 
-It’s not even a fair fight.
+The prototype is easier to explain, but it is not a drop-in replacement for interoperable email.
 
 ---
 
@@ -326,20 +288,16 @@ I started this project out of frustration.
 Out of a belief that we could do better.
 It has now become a conviction.
 
-The protocols of the past served us well.
-But their time is over.
-They are a liability.
-A source of complexity, insecurity, and limitations.
+The protocols of the past served us well, and their age alone does not make them obsolete.
+They embody interoperability, queuing, retries, mailbox access, abuse controls, and decades of deployment knowledge.
 
 We have the tools.
 We have the patterns.
 We have the web.
 
-My project is proof.
-A working blueprint for a future where email is just another modern web service.
-A future where our most essential communication tool is simple, secure, and built for the world we live in today.
+My project is a working prototype for exploring a different trade-off: a web-native API for a bounded ecosystem.
+Before it could claim to replace email, it would need a threat model, authenticated identity and discovery, key management, reliable delivery semantics, spam and abuse controls, durable storage, and backward compatibility.
 
-It's time to let the dinosaurs rest.
-It's time to build what comes next.
+It is worth building what comes next, as long as the missing protocol work is part of the design rather than hidden behind a simple POST request.
 
 ![old mess](/images/posts/chair.jpg)

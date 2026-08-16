@@ -14,7 +14,7 @@ Scala is a flexible programming language that uses the Java Virtual Machine (JVM
 
 ## Getting Started with Scala
 
-To begin using Scala, you have numerous options for configuring your development environment. While Scala supports a web-based IDE, many developers prefer Eclipse for its greater integration and features. Other popular choices are Replit and Visual Studio Code (VSCode). The setup procedure is comparable to Java, and you may use both Java and Scala code in the same project.
+To begin using Scala, choose a toolchain and editor or IDE that support the Scala version used by your project. The Scala documentation discusses build tools such as sbt and Mill, while editor support depends on the toolchain. The examples below use standard Scala syntax and are intended to be tried in a matching REPL or project. Scala also interoperates with Java, so a JVM project can use both languages.
 
 ## Scala Worksheets
 
@@ -30,12 +30,12 @@ Additionally, Scala provides a Read-Eval-Print Loop (REPL) similar to Python and
 
 ## Variables in Scala
 
-In Scala, you declare variables using `var` and `val`. The `var` keyword defines a mutable variable, while `val` is used for constants, meaning the value cannot be changed after it is assigned.
+In Scala, you declare variables using `var` and `val`. The `var` keyword defines a mutable variable, while `val` creates an immutable binding that cannot be reassigned. An immutable binding is not the same as an immutable object: the object referenced by a `val` may still be mutable.
 
 ```scala
 var i = 9
 var j: Int = 10  // No semicolons required, similar to Python
-val num: Int = 10  // This is like a constant or final variable
+val num: Int = 10  // The binding cannot be reassigned, similar to final in Java
 ```
 
 Scala encourages immutability, which means most data should be declared with `val`.
@@ -45,10 +45,10 @@ Scala encourages immutability, which means most data should be declared with `va
 Interestingly, operators in Scala are treated as functions. For example, the `+` operator is a method that can be invoked on numbers:
 
 ```scala
-8 + 7; // This is equivalent to 8 + 7
+8 + 7 // This is equivalent to 8.+(7)
 ```
 
-This feature allows for more expressive code, though it might seem unusual at first.
+Scala lets methods have operator-like names, so an expression such as `a + b` can call a `+` method. Java does not provide user-defined operator overloading; it uses named methods for this kind of behavior instead.
 
 ## Working with Classes in Scala
 
@@ -59,7 +59,7 @@ Defining classes in Scala is straightforward. You can create a simple class with
 case class Student(var rollNo: Int, var name: String = "Sujal", var marks: Int = 10)
 ```
 
-This line not only defines a class but also creates a constructor. Scala also supports constructor overloading and operator overloading, which are not available in Java.
+This line not only defines a class but also creates a constructor. Scala also supports constructor overloading and methods with operator-like names. Java uses named methods for user-defined behavior rather than Scala's operator syntax.
 
 ```scala
 var s1: Student = Student(10, name = "SujalC")
@@ -111,7 +111,7 @@ nums drop 2 take 2    // This also works without dots or parentheses
 
 ## Working with Different Data Types
 
-Scala's `AnyVal` and `AnyRef` types correspond to primitive and reference types in Java. You can create lists containing elements of different types:
+Scala's `AnyVal` represents value types, while `AnyRef` represents reference types; on the JVM, `AnyRef` corresponds to `java.lang.Object`. You can create a `List[Any]` containing values of different types:
 
 ```scala
 val arr: List[Any] = List(2, 3, true, "Yes!")
@@ -122,6 +122,7 @@ val arr: List[Any] = List(2, 3, true, "Yes!")
 Tuples allow you to group multiple values into a single compound value. Here's an example of how to use them:
 
 ```scala
+case class Student(rollNo: Int, name: String, marks: Int)
 val students = List(
   Student(1, "Asha", 82),
   Student(2, "Ravi", 54)
