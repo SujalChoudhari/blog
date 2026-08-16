@@ -45,14 +45,14 @@ The goal of `SujalChoudhari/bxios` is to combine the ergonomic API of `axios` wi
 The repository is structured into two main parts:
 
 ### 1. bxios (The Client)
-`bxios` is an axios-compatible drop-in REST client for JavaScript and TypeScript. Instead of making individual HTTP calls via `fetch` or `XMLHttpRequest`, `bxios` routes requests through a single persistent WebSocket connection.
+`bxios` was intended to provide an axios-style REST client for JavaScript and TypeScript. The August 3 snapshot was still developing that surface; its goal was to route requests through a single persistent WebSocket connection instead of making individual HTTP calls via `fetch` or `XMLHttpRequest`.
 
-From the developer's perspective, the code looks like standard axios:
+The intended developer-facing API was designed to resemble standard axios:
 
 ```typescript
 import { bxios } from 'bxios';
 
-// Make calls just like standard axios, but over a WebSocket tunnel
+// Illustrative target API shape; the full axios-compatible method suite was still work in progress.
 const response = await bxios.get('/api/v1/metrics/cpu', {
   params: { detailed: true }
 });
@@ -60,17 +60,18 @@ const response = await bxios.get('/api/v1/metrics/cpu', {
 console.log(response.data);
 ```
 
-Under the hood, `bxios` serializes the request path, parameters, headers, and body into a binary MessagePack frame and transmits it over the established WebSocket pipe. When the server responds, `bxios` decodes the binary frame and resolves the exact Promise associated with that request.
+Under the planned design, `bxios` would serialize the request path, parameters, headers, and body into a binary MessagePack frame and transmit it over the established WebSocket pipe. When a server responded, the client was intended to correlate that frame with the originating request and resolve its Promise.
 
 ### 2. bxios-server (The Server Framework)
 To process REST requests sent over a WebSocket tunnel, the server side needs a handler that understands how to parse frame headers and route requests to controller endpoints.
 
-`bxios-server` is built on top of `uWebSockets.js` for maximum I/O throughput, with a fallback driver for `ws` (Node.js native WebSockets). It acts like a FastAPI-style or Express-style drop-in framework tailored for WebSocket-tunneled REST routing.
+`bxios-server` was planned as a FastAPI-style or Express-style framework for WebSocket-tunneled REST routing. The August 3 snapshot had the transport-agnostic `IDriver` abstraction from PR #15, while concrete server-driver implementations and the framework surface were still being developed.
 
 ```typescript
 import { BxiosServer } from 'bxios-server';
 
-const app = new BxiosServer({ driver: 'uwebsockets' });
+// Illustrative target API; concrete server drivers were still being developed.
+const app = new BxiosServer();
 
 app.get('/api/v1/metrics/cpu', (req, res) => {
   res.json({ usage: 42.5, coreCount: 8 });
@@ -83,22 +84,22 @@ app.listen(8080);
 
 ## Wire Format and Internals
 
-To make REST over WebSocket fast, reliable, and predictable, bxios relies on three core internal mechanisms:
+The design and active work around REST over WebSocket centered on three internal mechanisms:
 
 ### 1. Binary MessagePack Frame Encoding
-JSON is readable, but parsing text strings and escaping characters on every frame wastes CPU cycles and bandwidth. `bxios` uses MessagePack frame encoding for all requests and responses over the wire. MessagePack packs integers, strings, arrays, and objects into compact binary formats. A JSON payload that takes 150 bytes in plain text often shrinks down to under 80 bytes in MessagePack, while encoding and decoding speeds increase noticeably.
+JSON is readable, but parsing text strings and escaping characters on every frame wastes CPU cycles and bandwidth. `bxios` uses MessagePack frame encoding for the request and response framing described in this snapshot. MessagePack packs integers, strings, arrays, and objects into compact binary formats, but the actual size and speed tradeoffs depend on the payload and implementation.
 
-### 2. The PendingMap Correlation Engine
+### 2. Planned PendingMap Correlation
 WebSocket messages are inherently asynchronous and non-blocking. When a client sends frame A and then frame B over the same socket, the server might finish processing frame B before frame A and send the response for frame B first.
 
 Without a correlation layer, the client would have no way to match incoming response frames with the original async promises.
 
-`bxios` implements a lightweight correlation engine centered around an internal structure called `PendingMap`. Every outgoing request frame receives a unique frame ID. When the request is sent, `bxios` creates a Promise, registers its `resolve` and `reject` handlers in `PendingMap` alongside the frame ID, and sets an optional timeout.
+`bxios` was designed to use a lightweight correlation engine centered around an internal structure called `PendingMap`. The planned flow assigned each outgoing request frame a unique frame ID, registered the Promise handlers alongside that ID, and set an optional timeout.
 
-When a binary frame arrives from the server, `bxios` reads the frame header, extracts the correlation ID, pulls the corresponding promise handlers from `PendingMap`, and resolves the promise with the decoded body and status code.
+In the planned flow, when a binary frame arrived from the server, `bxios` would read the frame header, use the correlation ID to look up the matching handlers, and resolve the Promise with the decoded body and status code.
 
-### 3. Isomorphic Connection Manager
-Network connections drop, servers restart, and mobile clients switch networks. An isomorphic connection manager inside `bxios` monitors socket state across browser and Node.js environments. If the underlying WebSocket drops, the connection manager triggers auto-reconnect routines with configurable retry backoff strategies, while queuing or rejecting pending frames based on configuration.
+### 3. Planned Isomorphic Connection Manager
+Network connections drop, servers restart, and mobile clients switch networks. The roadmap called for an isomorphic connection manager inside `bxios` to monitor socket state across browser and Node.js environments. If the underlying WebSocket dropped, it was intended to trigger auto-reconnect routines with configurable retry backoff strategies, while queuing or rejecting pending frames based on configuration.
 
 ---
 

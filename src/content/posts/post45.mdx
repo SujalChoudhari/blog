@@ -78,7 +78,7 @@ C++ gives you many ways to fail. You can throw an exception, return a null point
 
 Exceptions are particularly convenient because they are invisible. You do not have to write error handling code if you do not want to. The error will just bubble up the stack until it crashes the program or hits a generic catch block.
 
-Rust rejects the convenience of invisible errors. It forces failure into the type system using `Result` and `Option`.
+Rust rejects the convenience of invisible errors. It uses `Result` and `Option` to represent explicit recoverable-error and absence paths, while `panic!` remains available for unrecoverable failures.
 
 ```rust
 use std::fs::File;
