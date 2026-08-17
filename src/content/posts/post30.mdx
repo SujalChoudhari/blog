@@ -10,9 +10,9 @@ author: Sujal Choudhari
 
 ### Readability: The Unsung Hero of Maintainable Code
 
-In the last post we learnt that clean code is a must. It improves readability. Readability is the backbone of code that is easy to maintain, debug, and scale. We also looked at naming conventions and shared some tips. Descriptive variables, classes, and methods matter, but readability goes beyond individual names. It shapes the structure of the whole codebase.
+In the last post we looked at naming conventions and other clean-code habits. Descriptive variables, classes, and methods matter, but readability also shapes the structure of the whole codebase. That structure affects how easily code can be maintained, debugged, and changed.
 
-One solution is a "single-class-per-file" approach. Keep one class per file. I personally find this easier to work with in Git. In some codebases and team workflows, separate files can reduce merge conflicts. It can make code easier to find too. When each file has one purpose, understanding a component takes less effort. For me, it is also convenient when prompting AI models because I do not need to copy the whole codebase into the context.
+One option is a "single-class-per-file" approach. I find this easier to work with in Git, and in some codebases separate files can reduce merge conflicts or make code easier to find. It is a convention, not a rule: when each file has one purpose, understanding a component can take less effort, but the language and project structure still matter. For me, it is also convenient when prompting AI models because I do not need to copy the whole codebase into the context.
 
 Consistency matters at every level. Package and file names should match what they contain. A package like `utils.string_operations` leaves little room for confusion. It is a collection of string functions. What else could it be? A vague name like `utils.helpers` makes developers dig around to understand the role. What is a helper? What does it help with? Will it help me or the code? A lot of questions.
 
