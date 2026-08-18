@@ -263,5 +263,10 @@
     "id": "post53",
     "lane": "Technical",
     "reason": "Engineering opinion on player-hosted authoritative multiplayer architecture."
+  },
+  {
+    "id": "post54",
+    "lane": "Technical",
+    "reason": "DuckDB role split between control-plane authority and customer-facing analytics."
   }
 ]

@@ -1,0 +1,92 @@
+---
+title: "DuckDB Belongs Inside the Platform, Not at Its Center"
+date: 2026-08-18
+description: "DuckDB v2.0 makes the engine more useful as a platform component, not a reason to replace the control-plane database."
+tags: ["duckdb", "databases", "architecture", "systems", "postgresql"]
+categories: ["Engineering"]
+image: "/images/posts/code.jpg"
+author: Sujal Choudhari
+draft: false
+---
+
+DuckDB is becoming easier to place inside a real platform. That does not mean it should become the platform's authority.
+
+My decision is simple: PostgreSQL remains the system of record for control-plane state. DuckDB belongs beside it as an optional analytics or embedded data profile, behind an application-owned API. I do not want DuckDB at the center of the platform, and I do not want a direct Quack endpoint to become the first public database contract.
+
+That is not a dismissal of DuckDB. It is a boundary decision. DuckDB is very good at being close to data and doing useful analytical work. A control plane has a different job: it has to own small, frequent, concurrent decisions about resources, tenants, permissions, operations, and migrations. Those jobs can share a platform without sharing one authority.
+
+## What DuckDB is becoming
+
+DuckDB started from an in-process model. The database lives in the application process, which makes it unusually convenient for local analysis and embedded products. It speaks SQL, has a column-oriented execution engine, and can work directly with analytical data instead of forcing every query through a separate database service.
+
+The [DuckDB v2.0 preview](https://duckdb.org/2026/08/17/duckdb-20-highlights) changes the shape of that model. The preview describes DuckDB as a server through the Quack extension and the `CONNECT` statement, alongside a first-class `VARIANT` type, triggers, asynchronous I/O, a new SQL parser, a new default storage format, and a reworked C API. This is a meaningful expansion. DuckDB is not only a library that one process opens for a query anymore. The project is giving it a path to long-running, networked use.
+
+The word that matters here is preview. The v2.0 article is a preview of what is coming, not a stable release contract. It describes Quack as moving from preview toward stability in v2.0, but that is a statement about the planned release. The [current Quack overview](https://duckdb.org/docs/current/quack/overview) is more cautious: the protocol is under active development, its function names, settings, and defaults can change, and the page documents a beta release available in DuckDB v1.5.3.
+
+I treat those as two different facts, not as a contradiction. v2.0 shows the direction. The current documentation tells me what I can safely depend on today. That distinction alone is enough to keep Quack away from the first public contract of a platform.
+
+DuckDB also has the fundamentals people often reach for when arguing that it can replace a general-purpose database. Its [transaction documentation](https://duckdb.org/docs/current/sql/statements/transactions) describes ACID transactions, isolation, commit, and rollback. The Go integration is real. The v2.0 preview describes DuckDB as transactional, multi-connection software with MVCC and transaction isolation, not as a file reader that happens to accept SQL.
+
+Those are important capabilities. They are not the whole architecture.
+
+## The internal control-plane test
+
+When I evaluate a database for a control plane, I ask a less glamorous question than "Can it run a transaction?" I ask what kind of transaction the platform produces all day.
+
+A control plane does not mostly run large analytical queries. It creates a tenant, changes a resource, records an operation, updates a lease, checks a permission, writes an audit row, and retries a failed action. It does that in many small transactions, often from different workers and processes. It needs clear ownership when two writes collide, migrations that can be planned and rolled back, recovery procedures that operators understand, and a driver story that does not make every operational decision a custom integration.
+
+That workload is where I keep PostgreSQL as the authority.
+
+The [DuckDB concurrency documentation](https://duckdb.org/docs/current/connect/concurrency) is clear about the current model. In read-write in-process mode, one process can read and write. Multiple writer threads can work inside that process, using MVCC and optimistic concurrency control. If two threads try to edit the same row, the later edit can fail with a conflict. Multiple processes can read the native database in read-only mode. Multi-process writes use the Quack remote protocol.
+
+None of this is a flaw. It is a coherent embedded-database model. It also tells me what adding Quack does and does not solve. Quack provides a way for other DuckDB clients to reach a server process. It does not automatically give the platform a control-plane ownership model, a migration discipline, or an operational contract for every worker that needs to write metadata.
+
+ACID is a floor, not a job description.
+
+I like the fact that DuckDB takes transactions seriously. I like that a transaction can hide uncommitted changes from other transactions and roll back its own work. But the control-plane decision is not won by checking the ACID box. The harder questions are about the surrounding system: who owns the process, how many processes can write, how clients pool connections, how schema changes roll out, how old and new binaries coexist, and what an operator does when a migration stops halfway through a deployment.
+
+A Go client makes DuckDB easier to use from a service. It does not turn an analytical engine into a service-owned control-plane authority. Language integration removes friction at the edge. It does not settle the authority question in the middle.
+
+I would also avoid making an analytical engine carry a metadata workload just because the engine is fast. Control-plane tables are not impressive because they are large. They are important because they are the place where the platform decides what is allowed to happen. A small row updated by three workers at once can matter more than a billion-row report.
+
+This is my synthesis, not a claim that DuckDB cannot handle those writes. It can handle real transactions. My point is that the platform's most sensitive state deserves the database and operating model that make frequent small writes, migrations, recovery, and ownership boring. PostgreSQL is the better authority for that role.
+
+## The customer-facing test
+
+The answer changes when DuckDB is treated as a data product rather than as the control plane.
+
+A platform can expose analytics without exposing its database. An application-owned API can accept a report request, validate the tenant, choose a bounded query, run it against DuckDB, and return a result shaped for the product. That API can own authentication, authorization, quotas, rate limits, resource limits, and the lifecycle of the underlying data profile. It can also change the physical layout without forcing customers to learn the database's wire protocol.
+
+That is the form of DuckDB I trust. The application owns the public contract. DuckDB supplies analytical execution behind the contract.
+
+Direct Quack is a different proposition. The [Quack security documentation](https://duckdb.org/docs/current/quack/security) says that a Quack server exposes the full SQL surface of the underlying DuckDB session, including read and write access to every table the session can see. The same page describes a random authentication token, localhost-only defaults, authentication and authorization callbacks, and a TLS-terminating reverse proxy for non-local deployment. Those are useful safety controls, but they also make the boundary plain: a Quack endpoint is a database session exposed over HTTP, not a product API with a narrow set of application actions.
+
+That distinction matters for tenancy. An authorization callback can help answer whether a request is allowed. It does not, by itself, define the tenant model, prevent expensive queries, limit result size, manage per-customer storage, or decide which tables should exist for which customer. Those are application responsibilities if the endpoint is public.
+
+The security model is also not a footnote. DuckDB's [securing DuckDB overview](https://duckdb.org/docs/current/operations_manual/securing_duckdb/overview) tells operators to treat untrusted SQL like Bash or Python. SQL can access files and networks and consume CPU, memory, disk, or network resources unless the surrounding environment limits it. The recommended defenses include process or container isolation, network isolation, strict timeouts, file restrictions, and resource controls.
+
+That is a perfectly reasonable stance for a powerful embedded engine. It is also a warning against handing an arbitrary SQL endpoint to customers and calling the problem solved.
+
+Extensions sharpen the point. The [DuckDB extension security guidance](https://duckdb.org/docs/current/operations_manual/securing_duckdb/securing_extensions) says extensions run with the privileges of the parent DuckDB process. The documentation warns that community extensions can be dangerous and shows how to disable them, along with automatic installation and loading. If DuckDB sits behind an application-owned analytics API, the application can make extension policy part of the deployment boundary. If customers get a direct SQL session, that policy becomes part of the product's public security story.
+
+This is why I would not describe direct Quack as a MongoDB or Cosmos DB replacement. The [MongoDB transaction documentation](https://www.mongodb.com/docs/manual/core/transactions/) describes atomic operations on a document and transactions across multiple operations, collections, databases, documents, and shards. That is a document-database contract with its own client model and semantics. Quack exposes DuckDB SQL over an HTTP-based protocol. A `VARIANT` type may be useful for semi-structured values, but it does not make the protocol MongoDB-compatible or give the product MongoDB's document semantics.
+
+Cosmos DB sets an even clearer contrast in product shape. Microsoft's [Azure Cosmos DB overview](https://learn.microsoft.com/en-us/azure/cosmos-db/overview) presents it as a fully managed NoSQL and vector database with automatic scaling, global distribution, multi-region writes, SDKs, and administration handled as part of the service. Whether a platform needs all of those properties is a separate question. The point is that a managed database product includes an operational promise around the data service, not only a way to send SQL to a process.
+
+Quack can be useful without pretending to be either product. It can connect DuckDB processes, make a private analytical service possible, and support a platform component that already owns the surrounding controls. It should not be mistaken for a complete public database product just because it has a server mode.
+
+## The split I am keeping
+
+The split is not "PostgreSQL for boring data, DuckDB for interesting data." That would be too shallow. The split is about who needs authority and who needs analytical power.
+
+PostgreSQL stays at the center for control-plane state: tenants, resources, permissions, operations, migrations, and audit records. It owns the small decisions that coordinate the rest of the platform. I want one obvious system of record for those decisions, with an operational model built around concurrent metadata writes.
+
+DuckDB sits beside it for an optional analytics or embedded data profile. It can read data prepared for analysis, compute reports, explore customer-owned datasets, or power a product-specific data surface. The application owns the API, the tenant boundary, the query shapes, and the resource policy. DuckDB remains an implementation component that can be changed without rewriting the platform's identity and lifecycle model.
+
+Quack has a place in that picture, but not as the first thing customers see. A private internal connection between trusted components is a different risk from a public contract that promises database behavior to other developers. The current beta and active-development status matters more at that boundary, because changing protocol names, settings, or defaults can become a customer migration.
+
+DuckDB v2.0 makes this decision easier, not harder. The more capable DuckDB becomes as a server and as a transactional engine, the more useful it is inside a platform. It also becomes more tempting to promote it into the center because the demo looks complete: SQL, transactions, a server, a flexible value type, a Go client, and a path to multiple processes.
+
+I am resisting that promotion. Capability answers what DuckDB can do. Architecture answers what the platform should trust it to own.
+
+For this platform, PostgreSQL owns the truth. DuckDB earns a place behind the API, where its analytical strengths are useful and its operational boundaries are explicit. That is not keeping DuckDB small. It is putting it in the role where it can do its best work without making every control-plane decision depend on it.
