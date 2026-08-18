@@ -14,7 +14,7 @@ How does code such as `x = 5 + 2;` become an action on a computer? There is no s
 
 "Compiled" and "interpreted" are useful broad labels, but they are not a complete description of a language. A C++ implementation commonly translates source into machine code before the program runs. A language commonly described as interpreted may parse source, produce bytecode, and execute that bytecode in a runtime. Some runtimes also compile frequently used code while the program is running. The exact choices depend on the language and its implementation.
 
-Before any of those execution choices, an implementation has to understand the source. Two common early stages are tokenization and parsing.
+Regardless of which execution strategy it uses, an implementation first has to understand the source. Two common early stages are tokenization and parsing.
 
 ## Tokenization: Breaking Down the Code
 

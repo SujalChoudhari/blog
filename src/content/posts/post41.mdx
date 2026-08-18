@@ -8,13 +8,13 @@ image: "/images/posts/work_room.jpg"
 author: Sujal Choudhari
 ---
 
-I have one rule across my open-source and internal software projects: when a pull request changes system boundaries, data flow, or concurrency, its description should show the design and the local evidence needed to review that risk.
+My review rule is risk-based: when a pull request changes system boundaries, data flow, or concurrency, its description should show the design and local evidence needed to review that risk.
 
 That may mean a high-level design diagram, a low-level design diagram, a class or interface diagram, a sequence diagram, or a smaller combination of them. A documentation change or a 50-line bug fix does not need four diagrams by default. It does need enough explanation and test evidence for the change being made.
 
 Some developers find this strict. They think a 50-line bug fix or a small refactor only needs a two-sentence summary and a green CI badge. Text summaries can gloss over race conditions, circular dependencies, and edge cases. A current diagram can make connections and sequences easier to inspect, but it is still a model of the system, not a substitute for reading the code and tests.
 
-When you lead projects and review code from agents or other engineers, part of the job is making system design and contracts visible. Requiring the right diagram for the right change can reduce guesswork during review.
+Making system design and contracts visible can reduce guesswork during review, but the amount of documentation should match the change.
 
 ---
 
