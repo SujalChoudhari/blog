@@ -1,0 +1,83 @@
+---
+title: "WebAssembly Needs a Build Budget, Not Just a Compiler Flag"
+date: 2026-08-21
+description: "Rust-to-Wasm builds have costs beyond rustc, so teams should budget feedback time, post-processing, bytes, transfer, and startup separately."
+tags: ["webassembly", "rust", "compilers", "build-systems", "performance"]
+categories: ["Engineering"]
+image: "/images/posts/code.jpg"
+author: Sujal Choudhari
+draft: false
+---
+
+WebAssembly has already crossed the use-case threshold. Figma has a browser renderer that depends on it. Google has documented WasmGC work in Sheets. Cloudflare exposes WebAssembly as a Workers runtime API. The interesting question is no longer whether Wasm is real enough to use.
+
+The less glamorous question is how much the path to a shipped module costs. I do not trust a metric like `wasm build: 90s` to tell me that. A WebAssembly build is a pipeline with several different failure modes, and a single compiler flag hides most of them.
+
+## One pathological build is not the whole language
+
+A recent [case study on slow Rust-to-WebAssembly compilation](https://00f.net/2026/08/19/why-compiling-rust-to-webassembly-is-slow/) makes the problem unusually concrete. Its 40-line reproducer takes about 50 seconds to compile with full debug information and about 1.5 seconds without it. An `ed25519-compact`-derived case shows roughly a 40x slowdown when debug information is enabled.
+
+The interesting part is where the time goes. For the debug-information case, the article reports that LLVM's WebAssembly `Register Stackify` pass takes 43.51 seconds, or 85.6% of LLVM pass time. That is not a vague feeling that "Wasm is slow." It is one pass spending most of the build on one particular combination of input and debug information.
+
+The same article reports a proposed patch reducing the reproducer's end-to-end debug build from about 50.56 seconds to 2.72 seconds. That is a striking result, but it needs a narrow interpretation. It describes a specific LLVM and debug-info pathology. It is not proof that Rust-to-Wasm is inherently slow, and it is not a reason to treat every long build as an unavoidable property of the target.
+
+It is a reason to ask which phase is actually slow.
+
+## The flag is not the pipeline
+
+A Rust project does not go straight from one source file to a browser-ready module. Cargo and `rustc` prepare and compile the crate. LLVM optimizes and generates WebAssembly. Linking has its own cost. Then the output can pass through bindings, packaging, size optimization, a JavaScript bundler, compression, and the runtime's download and instantiation path.
+
+The [Cargo profile documentation](https://doc.rust-lang.org/cargo/reference/profiles.html) makes the relevant knobs separate on purpose. Optimization, debug information, incremental compilation, codegen units, and LTO are different settings with different effects. They should not be collapsed into one idea called "the Wasm build."
+
+More codegen units can permit more parallel processing and reduce compile time, with possible code-quality tradeoffs. LTO can improve whole-program optimization, but it can also make linking take longer. Incremental compilation helps one kind of developer feedback. It does not automatically make a clean release build cheap. Debug information can be valuable for one workflow and disastrous for another.
+
+That is already enough evidence for two profiles with different contracts. A developer profile should answer, "How quickly can I get a useful feedback signal?" A release profile should answer, "What is the cost of producing the module we intend to ship?" Those are related questions, not the same question with a different optimization level.
+
+The Rust/WebAssembly tooling adds more stages. [`wasm-bindgen`](https://rustwasm.github.io/docs/wasm-bindgen/) generates the boundary between JavaScript and Rust-compiled Wasm. [`wasm-pack`](https://rustwasm.github.io/docs/wasm-pack/print.html) wraps the build and packaging workflow. Post-processing such as `wasm-opt` can spend more time to produce a smaller module. A bundler can then change the final files again.
+
+None of these stages is a nuisance to hide in a top-level timer. They are the product of the build system. If `wasm-bindgen` regresses, that is a different incident from an LLVM pass regression. If `wasm-opt` makes release builds longer but removes enough bytes to improve transfer and startup, that is a tradeoff worth measuring. If the bundler duplicates a dependency, the compiler is not the culprit.
+
+The [Rust and WebAssembly code-size guide](https://rustwasm.github.io/docs/book/reference/code-size.html) and the [`wasm-bindgen` size-optimization guide](https://rustwasm.github.io/docs/wasm-bindgen/reference/optimize-size.html) point in the right direction: try the optimization settings, then measure the result. There is no universal percentage that makes an optimization automatically worthwhile. Build time and artifact size are both budgets.
+
+## WebAssembly is a target, not a source language
+
+This also makes the usual language debate less useful than it sounds. WebAssembly is a target format and execution boundary, not a source language. C and C++ have a broad historical footprint through Emscripten. Rust is a prominent modern choice for direct Wasm compilation. C# and .NET, Go and TinyGo, AssemblyScript, Kotlin, Dart, and other languages target Wasm too. There is no honest global ranking that settles the choice for every project.
+
+Unity's documented WebGL path makes the boundary visible. Its [Emscripten manual](https://docs.unity3d.com/6000.1/Documentation/Manual/webgl-native-plugins-with-emscripten.html) describes C# and .NET bytecode going through IL2CPP to C++, then through Emscripten to WebAssembly. Unity's runtime C and C++ code also goes through Emscripten. The shipped module may be Wasm even when the developer's starting point is not Rust, C, or C++.
+
+That matters because each source language and toolchain adds its own costs before the final module exists. An argument about which language is "best for WebAssembly" can miss the actual deployment boundary. The better question is where the project starts, which parts cross the boundary, and which stages the team can measure and control.
+
+The use cases are already concrete enough that this is not a theoretical distinction. Figma's [renderer and performance write-up](https://www.figma.com/blog/figma-faster/) discusses the cost of loading and interacting with large design documents. Google's [Sheets WasmGC case study](https://web.dev/case-studies/google-sheets-wasmgc) documents a browser workload using a WebAssembly garbage-collection path. Cloudflare's [Workers WebAssembly API](https://developers.cloudflare.com/workers/runtime-apis/webassembly/) treats Wasm as a supported runtime capability. These examples do not prove that every application should use Wasm. They do prove that the deployment target has crossed the threshold where build economics deserve first-class attention.
+
+## The budget I would put in CI
+
+I would give the pipeline separate measurements instead of one duration line. The exact limits depend on the product and the machines, so these are budget categories, not upstream requirements.
+
+| Budget | What to measure | What a regression means |
+| --- | --- | --- |
+| Developer feedback | Incremental edit-to-module time, plus a clean dev build | Profile settings, dependency fan-out, or an LLVM phase is hurting iteration |
+| Release compilation | Cargo, `rustc`, LLVM, and linking as separate spans | Optimization, codegen units, LTO, or the linker changed the cost |
+| Post-processing | `wasm-bindgen`, `wasm-pack`, `wasm-opt`, and bundling | The compiler is not the only producer of build time |
+| Artifact bytes | Raw Wasm and the final shipped JavaScript/module set | A code-size change may affect memory and startup even before the network |
+| Compressed transfer | Gzip or Brotli bytes for the files a user downloads | Raw size is not the same as network cost |
+| Startup | Download, decompression, instantiation, and first useful work | A fast build can still produce a slow first screen |
+
+The point is not to create a dashboard with six numbers nobody reads. The point is to make a failure nameable. CI should be able to say that the dev profile crossed its feedback budget, that LTO expanded release linking, that `wasm-opt` consumed the post-processing budget, or that compressed transfer grew after a dependency change.
+
+The clean and incremental cases should also stay separate. A warm incremental build answers a developer question. A clean release build answers a shipping question. A post-processing step can be cached in one environment and expensive in another. A raw `.wasm` file can stay the same size while a wrapper or bundler changes the bytes that actually reach the browser.
+
+This is where the debug-info pathology becomes useful. If a 40-line reproducer spends 43.51 seconds in `Register Stackify`, the right response is not to tune an unrelated bundler step and not to declare the whole toolchain slow. The right response is to show that phase in the trace, keep debug and release contracts distinct, and decide whether the affected build needs the same debug information at all.
+
+## Optimize for the shipped boundary
+
+A small release module is not automatically a good release. The module has to be downloaded, decompressed, instantiated, connected to its host language, and used for something visible. A build that takes five minutes but saves a few kilobytes may be correct for a release job and wrong for a developer loop. The same `wasm-opt` command can be reasonable in one lane and wasteful in another.
+
+This is why I would not make "turn on every size optimization" the default advice. The official Rust/WebAssembly guides recommend measuring size and build effects for a reason. An optimization can improve the final artifact while increasing compilation or post-processing time. It can also shift cost into startup in ways a file-size check will not show.
+
+The budget should follow the user-visible boundary. Measure the module that ships, not only the compiler output. Measure compressed transfer, not only raw bytes. Measure instantiation and first useful work, not only download time. The source code is important, but it is not the deliverable the browser executes.
+
+A phase-level build trace also makes ownership clearer. Compiler engineers can investigate an LLVM pass. Library maintainers can inspect dependency and code-size growth. Build-tool maintainers can fix binding or packaging work. Application teams can decide whether a feature justifies its startup and transfer cost. One opaque timer gives none of those groups a useful next action.
+
+WebAssembly is worth using when its portability, sandboxing, or code-reuse boundary solves a real problem. It is not worth using as a badge, and it does not excuse an unmeasured build pipeline. The target is already real. The engineering contract is the part that needs to catch up.
+
+Do not accept `wasm build: 90s` as a contract. Track developer feedback, release compilation, post-processing, artifact bytes, compressed transfer, and startup separately. Then a slow build is no longer a mysterious tax attached to a compiler flag. It is a phase with a budget, a tradeoff, and a person who can investigate it.

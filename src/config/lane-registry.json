@@ -273,5 +273,10 @@
     "id": "post55",
     "lane": "Technical",
     "reason": "Engineering argument for explicit ranges, integer semantics, reference mappings, and tests in fast day-of-week functions."
+  },
+  {
+    "id": "post56",
+    "lane": "Technical",
+    "reason": "WebAssembly build budgets across compilation, post-processing, bytes, transfer, and startup."
   }
 ]
