@@ -1,0 +1,118 @@
+---
+title: "The Fast Path Is a Proof Obligation"
+date: 2026-08-21
+description: "A fast day-of-week function is trustworthy only when its range, integer semantics, reference mapping, and tests stay explicit."
+tags: ["cpp", "algorithms", "performance", "systems", "date-time"]
+categories: ["Engineering"]
+image: "/images/posts/code.jpg"
+author: Sujal Choudhari
+draft: false
+---
+
+A low-level optimization is not finished when the fast expression works on a few examples. It is finished when I can state which inputs it accepts, what integer model it assumes, how it treats negative values, and how it is checked against something simpler.
+
+That is the useful lesson in Ben Joffe's article about fast day-of-week functions. The concrete problem is small, but it exposes a large engineering habit. `x % 7` is easy to maintain. A multiplication-and-shift sequence is interesting only after its contract is visible.
+
+## Start with the boring version
+
+The reference implementation should make the calendar mapping obvious. It does not need to win a benchmark. It needs to be readable enough that another implementation can be compared against it.
+
+```cpp
+int weekday_reference(int32_t day_count) {
+    int64_t n = static_cast<int64_t>(day_count) + epoch_offset;
+    int64_t r = n % 7;
+    return static_cast<int>((r + 7) % 7);
+}
+```
+
+The exact epoch offset depends on the representation and the desired weekday numbering. The important part here is the shape. The input has a declared width. The addition happens in a wider type. The second modulus turns C++'s negative remainder into a non-negative result.
+
+That last detail is not decoration. In C++, `-1 % 7` is `-1`, not `6`. A function that silently assumes mathematical modulo has already left its specification incomplete. Signed overflow, conversions to unsigned, and shifts on signed values create the same kind of boundary. The code may look like arithmetic, but it is also a statement about the language.
+
+Joffe compares this sort of simple modulus with Howard Hinnant's method, Cassio Neri's full-range method, and several multiplication and shift variants. Hinnant's technique is attractive because it is readable and not tied to one integer width, though the article notes a C/C++ overflow boundary at the highest four signed 32-bit inputs. Neri's 2024 approach handles the full signed 32-bit range by moving the work into unsigned arithmetic. Those are useful reference points before the stranger-looking formulas appear.
+
+## The range is part of the function
+
+The fastest-looking expression in the article is not a universal replacement for the reference function. One restricted-range Unix weekday variant is presented as three arithmetic operations:
+
+```cpp
+const uint32_t M = 613566757u;
+const uint32_t Z = 0x94920000u;
+
+uint32_t weekday =
+    (static_cast<uint32_t>(day_count) * M + Z) >> 29;
+```
+
+Joffe gives that variant a signed 32-bit input range from `-89,434,796` to `89,522,175`. Within that range, the result is the Unix-style weekday in `[0..6]`. It is a remarkable compression of the problem, but the range is doing real work. The approximation eventually drifts far enough to land on the wrong segment, so the expression cannot be treated as a drop-in function for every `int32_t` value.
+
+That should change how the code is named and documented. A function called `weekday_fast(int32_t)` suggests a full-width contract. A function whose proof covers only a smaller interval needs that interval in its comment, API, or type-level boundary. Otherwise a later caller can pass a perfectly valid integer and get a perfectly wrong weekday.
+
+There are only a few honest choices when the caller can leave the restricted interval: reject the input, route it to the reference implementation, or use a full-range algorithm. Silently keeping the restricted formula is not a performance decision. It is a correctness bug with a good benchmark attached.
+
+## Why three operations can work
+
+The trick is not magic. It starts with the fact that 7 is a Mersenne number:
+
+```text
+7 = 2^3 - 1
+```
+
+For this divisor, Joffe uses the identity:
+
+```text
+N % 7 = floor(N * 8 / 7) % 8
+```
+
+The implementation approximates multiplication by `8 / 7` with a constant multiplication and a shift. The final `% 8` becomes a matter of keeping three bits. The constant `Z` rotates those output values so that the labels line up with the Unix epoch and the selected weekday numbering.
+
+The approximation is the important part. Each multiplication and shift maps inputs onto a set of output segments. The segments are almost right, but they slowly fan out because the reciprocal is represented by a finite integer constant. A restricted range is the region where that fan-out has not crossed a boundary.
+
+That is why the three-operation version deserves a proof obligation. The constant is not a mystical speed rune. It encodes a modular identity, an approximation, and a chosen output rotation. Change the width, signedness, epoch, or output numbering and the proof changes with it.
+
+## Full range needs correction work
+
+The full signed 32-bit variants make the tradeoff clearer. Joffe describes a round-down multiplier based on `floor(2^32 / 7)`, whose value is `613566756`. The exact quotient is:
+
+```text
+2^32 / 7 = 613566756.5714...
+```
+
+The missing fractional part is `4 / 7`. One correction in the article uses input-derived shifts:
+
+```text
+b = (rd >> 1) + (rd >> 4)
+```
+
+The two terms approximate `1/2 + 1/16 = 0.5625`, which is close to the required fractional correction. The full-range variant then combines the multiplication result, the correction, and a rotation constant before the final shift. The correction is not a random patch. It is the part that keeps the reciprocal approximation honest over the whole signed 32-bit domain.
+
+This also explains why source-level operation counts are a poor performance story. The correction shifts depend only on the input, so a superscalar processor can overlap them with the multiplication. A variant with an extra visible expression can still have useful latency or throughput characteristics. The best choice depends on the dependency chain, the target processor, and the assembly emitted by the compiler.
+
+The article discusses x86 and ARM code generation separately and reports source-side comparisons on an AMD Ryzen 9 and an Apple M4 Pro. I would not copy those numbers into a different date library and call the decision made. They are evidence about the tested code, compilers, and machines. They are not a substitute for measuring the workload that actually matters.
+
+Latency and throughput are also different questions. A low-latency function helps when one result sits on the critical path. A high-throughput function can be better when independent work overlaps across a loop. Joffe's preferred three-instruction sequence is described as a high-throughput x86 choice, not necessarily the lowest-latency option. That distinction is easy to lose when a benchmark table is reduced to a single number.
+
+## Tests are part of the fast path
+
+The reference function belongs beside the optimized function. It is not dead code. It is the executable description of the mapping that the fast path claims to preserve.
+
+A small property test has the right basic shape:
+
+```cpp
+for (int32_t day : test_inputs) {
+    assert(weekday_fast(day) == weekday_reference(day));
+}
+```
+
+The input set must include negative values, zero, positive values, the published range boundaries, and the awkward values around them. A handful of dates from the current century proves almost nothing about a signed 32-bit contract. For a restricted variant, the test should also make the out-of-range behavior explicit instead of pretending the formula has no boundary.
+
+Joffe reports exhaustive testing for the 8-bit, 16-bit, and 32-bit functions across their stated ranges. The 64-bit variants are tested in bounded chunks around zero, both extremes, and a random selection because exhaustive testing there is impractical. That testing detail matters as much as the formulas. It tells the reader what was actually checked and where the evidence stops.
+
+There is a subtle trap in comparing two clever implementations. If the reference function shares the same arithmetic shortcut, both functions can agree for the same wrong reason. The reference should use a different, simpler route. It should make signedness and positive modulo explicit even if that makes it slower.
+
+## My rule for fast code
+
+Keep the simple version unless measurement shows that the fast path matters in the real workload and on the real target. A division or modulus that runs once per request is usually a maintenance cost worth paying. A date conversion in a hot inner loop may justify more aggressive arithmetic, but the burden of proof rises with the opacity of the code.
+
+When the fast path earns its place, keep four things visible beside it: the accepted range, the integer and signedness assumptions, the simple reference implementation, and the tests that compare the two. Check the generated assembly for the compilers and architectures that matter. Treat published benchmark results as useful context, not as a promise about an unrelated machine.
+
+A fast formula is not self-justifying. Its range, semantics, reference mapping, and tests are part of the algorithm. The concrete case is Ben Joffe's [A faster way to calculate the day of the week](https://www.benjoffe.com/fast-day-of-week), which makes those proof boundaries unusually visible for such a small function.

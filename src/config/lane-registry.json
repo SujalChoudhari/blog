@@ -268,5 +268,10 @@
     "id": "post54",
     "lane": "Technical",
     "reason": "DuckDB role split between control-plane authority and customer-facing analytics."
+  },
+  {
+    "id": "post55",
+    "lane": "Technical",
+    "reason": "Engineering argument for explicit ranges, integer semantics, reference mappings, and tests in fast day-of-week functions."
   }
 ]
