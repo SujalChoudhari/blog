@@ -278,5 +278,10 @@
     "id": "post56",
     "lane": "Technical",
     "reason": "WebAssembly build budgets across compilation, post-processing, bytes, transfer, and startup."
+  },
+  {
+    "id": "post57",
+    "lane": "Technical",
+    "reason": "Opinion on eh's compact vi-like contract versus discoverability and usability."
   }
 ]

@@ -1,0 +1,56 @@
+---
+title: "A vi Alternative Still Has to Be Easy"
+date: 2026-08-24
+description: "eh has a clear, compact editor contract, but a vi-shaped interface still has to be easy to discover and use."
+tags: ["eh", "text-editors", "unix", "c", "usability"]
+categories: ["Engineering"]
+image: "/images/posts/code.jpg"
+author: Sujal Choudhari
+draft: false
+---
+
+The name is "eh", which I read as "ehh", like saying `.zshrc` out loud. The joke is small. The real question is less cute: why should I learn another vi-shaped editor?
+
+I use `nano` and `micro`. I like them because they are approachable. I can open a file and discover enough of the interface without first memorizing a language. I do not see why an editor cannot simply be easy to use. `vi` is easy for people who already use it. That is not the same thing as being easy for everyone.
+
+That is the standard I bring to `eh`. Not "can a terminal editor be implemented neatly?" It clearly can. The question is whether a compact implementation creates a reason for me to change editors.
+
+## What eh is actually promising
+
+The project describes itself as "Edit Here", a minimalist `vi(1)`, or "vi the good parts" version. It opens or creates a file with `eh [filename]`. Its commands look vi-like, but the README is careful to say they are similar, not identical.
+
+That distinction matters. `eh` is not selling itself as a drop-in vi compatibility layer. It has counts, motions, marks, regex search and replace, selections, yank/delete/change, paste, indentation, shell filtering, and undo/redo. I am not listing those to award points. They show the shape of the promise: keep the modal, keyboard-driven core, cut the rest, and make the result small.
+
+The code follows that idea. `eh.c` uses a buffer-gap layout, curses, regular expressions, and its own UTF-8 scanning and display paths. The Makefile also has functional-test machinery rather than treating the executable as the whole project. I like this kind of bounded engineering. The implementation has a point of view.
+
+But a clean point of view in C is not the same as a clean first experience for a person.
+
+## A contract is not discoverability
+
+A vi user can look at the command list and see a familiar map. Counts, motions, marks, and operators make sense if those concepts already live in their hands. For that audience, removing extra machinery can be a feature. `eh` might be a nice small tool for someone who enjoys terminal internals or wants a deliberately narrow vi-like editor.
+
+I am not that audience.
+
+The README says `u` and `U` provide multi-undo and redo rather than historical vi behavior. That is an honest compatibility boundary, and I respect the honesty. It is also evidence that the cursor language is a learned interface, not a universal shortcut scheme. Even small deviations matter when the whole editor asks the user to remember what each key means in each mode.
+
+This is where "vi the good parts" becomes a questionable phrase. Good for whom? If the good parts are the parts a vi user already knows, then the editor is optimized for transfer of muscle memory. It is not optimized for discovery.
+
+Nano and micro remain my top choices for a boring reason: they are approachable. The interface gives me a path into the tool. I do not need to arrive with a private dictionary of motions before I can feel competent. That is not a demand for a toy editor. It is a demand that the editor meet me halfway.
+
+## The caveats are part of the product
+
+I also appreciate that the project documents its edges instead of pretending the terminal is a blank canvas. Long physical lines larger than the terminal screen are called untested and undefined. The README says CRLF files should be converted to LF. Display behavior for control characters depends on curses, terminal settings, and the emulator, and the Cygwin note calls out possible `wcwidth()` trouble around surrogate pairs.
+
+Those are not automatic deal-breakers. Every small systems tool has boundaries. In fact, this is one of the strongest things about `eh`: the author gives the reader a real contract instead of vague confidence.
+
+But the same honesty makes the audience narrower. This is an editor for someone who is happy to read the boundary notes, accept the command differences, and decide whether the trade is worth it. That is a legitimate audience. It is not everyone who wants to edit a file in a terminal.
+
+## My verdict
+
+I find `eh` technically neat and editorially honest. I can see why a vi user or someone who enjoys terminal/editor internals would enjoy studying it. The smallness is deliberate, and the implementation choices are interesting.
+
+I still would not replace `nano` or `micro` with it. This is not a hands-on review. I am judging the source and the interface promise, not pretending I have field-tested the tool. My point is simpler: an editor does not earn a place in my toolbox merely by being a compact alternative to vi. It has to be easy to approach.
+
+Nobody asked for another vi-like editor. That does not make `eh` pointless. It means technical neatness alone does not create a need. If you already speak vi, `eh` may be a tidy dialect. If discoverable editing is what you need, skip it.
+
+Read the [eh source repository at the pinned commit](https://codeberg.org/SirWumpus/eh/commit/efd5fcd2eeb0ff773e34dde8381442cc88a7f6f6) for a closer look at the implementation and its contract.
