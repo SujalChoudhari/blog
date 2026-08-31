@@ -21,7 +21,7 @@ let registryIds = new Set(laneRegistry.map(r => r.id));
 let valid = true;
 let totalMapped = 0;
 
-if (registryIds.size !== 60) valid = false;
+if (registryIds.size !== 61) valid = false;
 if (registryIds.has("post18")) valid = false;
 
 sortedPosts.forEach((post: any) => {
@@ -35,7 +35,7 @@ sortedPosts.forEach((post: any) => {
   }
 });
 
-if (totalMapped !== 60) valid = false;
+if (totalMapped !== 61) valid = false;
 if (!valid) {
   throw new Error("Invalid lane mapping");
 }

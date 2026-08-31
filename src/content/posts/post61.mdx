@@ -1,0 +1,76 @@
+---
+title: "Zero Perceived Latency Is a Prefetching Contract"
+date: 2026-08-31
+description: "What a 240-million-domain autocomplete system gets right about typing budgets, bounded indexes, and the difference between fast and instant."
+tags: ["performance", "web", "latency", "search", "systems"]
+categories: ["Engineering"]
+image: "/images/posts/code.jpg"
+author: Sujal Choudhari
+draft: false
+---
+
+Autocomplete is usually framed as a search problem. Type a prefix, query an index, return a few matches. Make the index faster and the interface gets faster.
+
+That explanation misses the interesting part of [p99 0 ms* autocomplete for 240 million domain names](https://ruurtjan.com/articles/p99-0ms-autocomplete-for-240-million-domain-names). The system is not trying to make a request disappear. It is trying to finish the request before the user expects an answer.
+
+That is a different contract. The visible result depends on typing rhythm, browser events, cache state, network distance, and the shape of the index. The server matters, but it is only one part of the path.
+
+## The keyboard is part of the latency budget
+
+The article's main trick is simple. When the user presses a key, the browser requests suggestions for the prefix that is already known plus each possible next character. When the user releases the next key, the browser renders the matching result from that prefetch if it has arrived.
+
+Suppose the user types `w`, then `i`, then `k`. The request for `wi` starts as soon as `i` is pressed. The browser can render suggestions for `wik` when `k` is released, provided the earlier request finished in that interval.
+
+The author defines autocomplete latency as keyup to results ready for rendering, not the full network round trip from the first key event. Under that definition, p99 0 ms means that 99 percent of results are ready before the user releases the key that needs them. The asterisk is doing real work here. It means zero perceived wait, not zero computation or zero network time.
+
+The article measures a p99 typing budget of 121 milliseconds for the author typing 100 domain names at a reasonable speed. A 60 Hz display gives roughly 16.7 milliseconds per frame, but the useful budget comes from the time between key events. Fast typing leaves less room. Slow typing leaves more. The interface is using time that already exists in the user's action instead of asking for a new pause after it.
+
+This is the first design choice I trust. It defines responsiveness at the point where a person notices it. A backend benchmark can say that an endpoint answered in 2 milliseconds. The user experiences the gap between an input event and a visible completion. Those are related measurements, not interchangeable ones.
+
+## The index is split by the job it has to do
+
+The data structure is just as deliberate. The autocomplete service uses the Tranco list of the top one million domains for its popular results, then supplements those results with the larger CZDS domain collection when the head index is not enough.
+
+The head is an in-memory character trie. It stores the top eight suggestions for every prefix, so a common lookup is a short walk through pointers. The tail is a different system: sorted and delta-compressed domain names in fixed-size blocks, with a small in-memory directory. A lookup finds a block through the directory and scans 256 names inside it.
+
+The reported scale makes the split concrete. The in-memory directory is about 27 MB. The 240 million names take about 2.5 GB on disk. The common path gets memory and simple pointer traversal. The long tail gets compact storage and a bounded read. Neither path is forced to pretend it has the same access pattern.
+
+The article also points out that the input space is unusually friendly to bounded lookup. Domain names use 38 valid characters in this context: letters, digits, a hyphen, and a dot. The query length is bounded too. That lets the author describe the worst-case work for both data structures as effectively constant for this application, even though the tail still includes a logarithmic directory lookup and a block scan.
+
+That qualification matters. The useful property is not that every search problem is secretly `O(1)`. It is that the input and output contract are constrained enough for the implementation to make a credible latency budget. A search box for arbitrary documents, fuzzy language, or unbounded result sets has a different problem.
+
+## A fast origin does not beat geography
+
+The backend measurements are good, but they are not the whole victory. The article reports that most requests reach the API in under 2 milliseconds. In a load test at 1,600 requests per second, the Nginx plus API path responds in 15 milliseconds at p99.
+
+That is comfortably inside a 121 millisecond typing window for a user close enough to the server. It does not make the system equally fast for everyone. The author runs one server in Europe and estimates that traffic from the United States adds 100 to 200 milliseconds. At that distance, the network can spend the entire perceived-latency budget before the origin has done any meaningful work.
+
+This is why prefetching is more interesting than another round of endpoint tuning. The API can be extremely fast and still miss the interaction budget. The client can hide part of the round trip, but it cannot make geography disappear. The source is honest about that boundary: multiple servers and geographic load balancing could close the gap, but the operational cost may not fit a niche tool.
+
+That last decision is as important as the data structure. The design does not chase a perfect number at any cost. It reaches the target for a defined audience and leaves the remaining limitation visible.
+
+## The extra requests are not free
+
+Prefetching sounds wasteful because most predictions are not eventually used. For every character, the client may ask for many possible next characters even though the user chooses one. The design stays practical because the response is bounded. With 38 valid characters and eight names per response, the article puts an upper limit of 312 domain names in a response, about 5 kB before compression and about 2.5 kB after it.
+
+That is a trade, not a free trick. The client spends bandwidth and cache work to remove a pause from the interaction. In this case, the author compares the compressed response with ordinary image payloads and considers the cost acceptable. A different product may have larger responses, expensive queries, private data, or a much smaller request budget. The same prefetch rule could be reckless there.
+
+The cache also needs a freshness story. The article explains how the popular prefix data and the large tail are indexed, and it explains the latency path. It does not turn autocomplete into a general data correctness system. Domain inventories change, ranking data ages, and a cached suggestion can be useful without being current. Those are separate contracts from the one that governs whether the next character feels instant.
+
+I like that separation. A system does not become complete just because its demo is quick. The latency design is strong precisely because it is narrow enough to inspect. Freshness, update pipelines, cache invalidation, and failure behavior still need their own evidence.
+
+## Fast is not the same as instant
+
+There are two ways to improve a search box. One is to make the query faster. The other is to change when the query happens.
+
+The first approach is necessary. A slow origin misses more typing windows, fills caches less reliably, and makes every fallback painful. The second approach is what changes the interaction. The user is already spending time pressing and releasing keys. The system uses that interval as an execution window and makes the final render look immediate.
+
+That is a more useful way to think about responsive software. The relevant question is not always, "How quickly can the function return after I call it?" Sometimes it is, "What work can happen before the user reaches the point where the result matters?" A compiler can do it with incremental state. A UI can do it with speculative data. A network service can do it with cached prefixes. The technique only earns its place when the prediction space is bounded and the wasted work is affordable.
+
+The 0 ms claim is therefore not magic, and it is not a claim that the server has no latency. It is a user-facing result built from a timing model, a constrained alphabet, two storage paths, caching, and a willingness to admit where one European server stops being enough.
+
+That is the part worth copying. Do not begin with a faster database because the endpoint is the obvious thing to benchmark. Begin with the event the user is waiting on, measure the time available before that event, and make the rest of the architecture fit inside that boundary.
+
+## Source
+
+The detailed design and measurements are in [p99 0 ms* autocomplete for 240 million domain names](https://ruurtjan.com/articles/p99-0ms-autocomplete-for-240-million-domain-names).

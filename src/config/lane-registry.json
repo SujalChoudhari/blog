@@ -298,5 +298,10 @@
     "id": "post60",
     "lane": "Life",
     "reason": "Personal reflection on listening, silence, and presence through acting."
+  },
+  {
+    "id": "post61",
+    "lane": "Technical",
+    "reason": "Engineering argument for treating perceived autocomplete latency as a prefetching and bounded-index contract."
   }
 ]
