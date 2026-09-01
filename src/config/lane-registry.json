@@ -308,5 +308,10 @@
     "id": "post62",
     "lane": "Technical",
     "reason": "Engineering argument for constructing files through unnamed inodes and publishing them only after completion."
+  },
+  {
+    "id": "post63",
+    "lane": "Writing",
+    "reason": "Worldbuilding reflection on the larger world behind When the Gods Went Silent."
   }
 ]
