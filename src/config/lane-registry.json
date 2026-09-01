@@ -303,5 +303,10 @@
     "id": "post61",
     "lane": "Technical",
     "reason": "Engineering argument for treating perceived autocomplete latency as a prefetching and bounded-index contract."
+  },
+  {
+    "id": "post62",
+    "lane": "Technical",
+    "reason": "Engineering argument for constructing files through unnamed inodes and publishing them only after completion."
   }
 ]

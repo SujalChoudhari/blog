@@ -1,0 +1,100 @@
+---
+title: "A File Can Be Complete Before It Has a Name"
+date: 2026-09-01
+description: "Linux's O_TMPFILE flag lets a program populate an unnamed inode and publish it only after the file is ready."
+tags: ["linux", "systems", "filesystems", "c", "engineering"]
+categories: ["Engineering"]
+image: "/images/posts/code.jpg"
+author: Sujal Choudhari
+draft: false
+---
+
+Most file-writing code starts by choosing the final name. That is often backwards.
+
+If a process writes directly to `report.json`, another process can see the file while it is still being filled. A crash can leave the name pointing at a partial artifact. Even a careful temporary filename creates a visible object that has to be hidden, cleaned up, and kept separate from a real file with a similar name.
+
+Linux has a smaller and cleaner option. Create the file without a pathname, populate it, set its attributes, and publish the name only when the file is ready. The `O_TMPFILE` flag is one of those APIs that looks niche until you see the failure boundary it gives you.
+
+I like the rule behind it: an unfinished artifact should not be addressable as if it were finished.
+
+## The pathname is a publication event
+
+A pathname is not just a label. It is how other processes find an object.
+
+That makes the act of putting a name in a directory a useful publication boundary. Before that point, a writer can still fail, retry, change permissions, or discover that the output is invalid without asking readers to interpret a half-written file. After that point, readers have a stable name to open.
+
+The common workaround is to invent a temporary name such as `report.json.tmp`, write the contents, then rename it. That pattern can be perfectly reasonable. It still creates a pathname for the intermediate object, and the program has to choose a name that will not collide, keep that object out of normal discovery, and clean it up when the process exits at an inconvenient time.
+
+`O_TMPFILE` changes the order. The inode exists, but the directory has no entry for it yet.
+
+## What `O_TMPFILE` actually creates
+
+The Linux `open(2)` manual page describes `O_TMPFILE` as creating an unnamed temporary regular file. The path passed to `open` is a directory, and the unnamed inode is created in that directory's filesystem. Data written to it is lost when the last file descriptor closes unless the file is given a name.
+
+A minimal shape looks like this:
+
+```c
+int fd = open("/path/to/dir", O_TMPFILE | O_RDWR, 0600);
+if (fd == -1) {
+    /* Handle an unsupported filesystem or another open error. */
+}
+
+/* Write the complete artifact and set its attributes. */
+
+if (linkat(fd, "", AT_FDCWD, "/path/to/report.json", AT_EMPTY_PATH) == -1) {
+    /* The unnamed file remains private to this file descriptor. */
+}
+```
+
+The important line is not the flag by itself. It is the separation between the file descriptor and the directory entry. The writer works with the descriptor. Readers discover the file through the name only after `linkat` succeeds.
+
+The manual gives the same pattern for a file that is filled and adjusted with operations such as `fchown`, `fchmod`, and `fsetxattr` before it is linked into the filesystem in a fully formed state. The final link is the handoff from private construction to public naming.
+
+That is a more useful contract than "please do not read this file yet." The unfinished file has no pathname for an ordinary directory lookup to follow.
+
+## The strange meaning of `O_EXCL`
+
+There is a small trap in the API. `O_TMPFILE` must be combined with `O_WRONLY` or `O_RDWR`, and it can also be combined with `O_EXCL`.
+
+For ordinary file creation, people usually read `O_EXCL` as a collision rule. With `O_TMPFILE`, the manual gives it a different meaning: it prevents the unnamed file from being linked into the filesystem later.
+
+That creates two distinct modes:
+
+- without `O_EXCL`, the descriptor can remain an invisible scratch file or be published with `linkat`;
+- with `O_EXCL`, the file is deliberately unnameable and disappears when the last descriptor closes.
+
+The difference is easy to miss because the same flag name is doing related but not identical work. It is a reminder that systems APIs have to be read in context, not assembled from familiar flag names.
+
+## Why not just make a random temporary name?
+
+A random name solves one problem: collision avoidance. It does not give the intermediate file a useful lifecycle by itself.
+
+The file can still appear in directory listings. A watcher can notice it. A permissions mistake can expose it. A cleanup path has to account for failures between creation and rename. If the temporary name follows a predictable pattern, other programs may treat it as a real input unless they know the convention.
+
+The unnamed-inode approach removes the naming problem from the construction phase. It also avoids symlink attacks for the temporary-file use case described by the manual, because the file cannot be reached through a pathname while it is being built. The program does not need to invent a unique name or ask every reader to understand its staging convention.
+
+This does not make every file update safe. It makes one boundary explicit: construction happens through a file descriptor, publication happens through a directory entry.
+
+## The boundary is not magic
+
+`O_TMPFILE` is a Linux feature, introduced in Linux 3.11, and it requires support from the underlying filesystem. The manual lists a subset of filesystems with support, so code that depends on it needs a deliberate fallback or a clear error when the target filesystem cannot provide it.
+
+Publishing also has its own permission boundary. The documented `AT_EMPTY_PATH` form of `linkat` has capability requirements, and the manual describes a `/proc/self/fd` alternative when the caller lacks the needed capability and proc is mounted. That is not a reason to avoid the design. It is a reason to keep the deployment assumptions visible.
+
+There is another limit worth keeping in view. An unnamed file gives one process a strong construction boundary. It does not decide whether the bytes are valid, whether the application should replace an older file, or whether readers need a version check. It is a filesystem primitive, not a transaction protocol for the whole application.
+
+That narrowness is part of its appeal. The flag solves visibility and naming. Validation, replacement policy, durability, and recovery still belong to the surrounding design.
+
+## My file-publication rule
+
+When a program produces an artifact that other processes consume, I want the handoff to be a distinct operation. The writer should be able to fail without leaving a plausible-looking object behind, and readers should have a name that means the construction phase has ended.
+
+`O_TMPFILE` expresses that rule directly. It starts with an inode that cannot be found by its pathname, lets the writer finish the contents and attributes, and then offers one explicit link step for publication. If the writer closes the descriptor first, the unfinished object goes away instead of becoming another cleanup task.
+
+The API is not portable, and its filesystem and permission requirements matter. That is a fair price when the actual problem is Linux file publication. I would rather have a narrow primitive with a visible contract than a pile of filename conventions pretending to be a lifecycle.
+
+A file does not need a name while it is being made. It needs one when it is ready to be found.
+
+## Source
+
+The details and example come from the [Linux `open(2)` manual page](https://man7.org/linux/man-pages/man2/open.2.html), maintained on man7.org.
