@@ -313,5 +313,10 @@
     "id": "post63",
     "lane": "Writing",
     "reason": "Worldbuilding reflection on the larger world behind When the Gods Went Silent."
+  },
+  {
+    "id": "post64",
+    "lane": "Technical",
+    "reason": "Language-design lesson from implementing a Python-shaped interpreter under a 1024-byte C constraint."
   }
 ]

@@ -1,0 +1,57 @@
+---
+title: "A 1024-Byte Interpreter Is a Language Design Exercise"
+date: 2026-09-07
+description: "A tiny C interpreter shows that language compatibility starts with choosing which parts of a language deserve to exist."
+tags: ["c", "compilers", "interpreters", "language-design", "systems"]
+categories: ["Engineering"]
+author: Sujal Choudhari
+draft: false
+---
+
+A Python interpreter that fits in 1024 bytes sounds like a code-golf stunt. It is more useful than that.
+
+[Austin Z. Henley's write-up](https://austinhenley.com/blog/python1024.html) starts with a constraint that leaves no room for polite compromises: write an interpreter for a small Python-shaped language in 1024 bytes of C, without macro tricks or library shortcuts. The result cannot implement Python in any complete sense. The interesting question is what it keeps.
+
+That is language design in miniature. Before an implementation can be fast, elegant, or compatible, somebody has to decide what the language means at the boundary.
+
+## The first version was a calculator
+
+The write-up describes an early attempt that handled expressions such as `1 + 2`, then assignments such as `x = 1 + 2 * 3`, and finally a simple conditional. It worked, but it looked more like a calculator with statements than Python.
+
+The correction was not a clever parser trick. It was a change in the definition of success. A small interpreter had to preserve the shapes that make a program look and feel like Python: `def`, indentation, colons, `for`, `while`, and familiar expression syntax. It could leave out most of the language, but the remaining pieces had to carry the right identity.
+
+I trust this approach more than the usual feature checklist. Compatibility is not the number of keywords an implementation recognizes. It is the set of expectations that survive when someone moves a program across the boundary.
+
+## A parser can be smaller when it gives up earlier
+
+The implementation described in the article does not reproduce CPython's pipeline. CPython tokenizes source, builds an abstract syntax tree, performs analysis and optimization, emits bytecode, and interprets that bytecode. The tiny interpreter takes a shorter path.
+
+It stores source in a fixed-length array, keeps variables in another fixed array, and uses a handful of global variables to track the current position and character. Its expressions use recursive descent parsing. In places, it executes while parsing instead of building a separate representation first.
+
+Those choices are not generally good production defaults. They are clear responses to the size limit. A design that normally separates parsing, analysis, and execution has less room when the entire implementation must fit inside a small file. The constraint forces the author to decide which boundaries are essential and which can be collapsed for this specific job.
+
+That is the part worth carrying into larger systems. A boundary should exist because it protects an invariant or makes a change manageable, not because every compiler diagram includes it.
+
+## The missing features are part of the contract
+
+The interpreter makes strong assumptions. The article says it has no error handling of any kind and expects the input to follow the supported syntax. It also supports only a subset of Python's syntax and semantics.
+
+That is not a hidden flaw in this project. It is the stated contract. The problem would begin if the tool presented itself as a general Python runtime while silently accepting only the examples that fit the demo.
+
+Small implementations often become easier to understand when their exclusions are explicit. A parser that rejects unsupported constructs is easier to reason about than one that appears broad but quietly produces the wrong result. A runtime that documents its fixed limits gives its caller a chance to validate inputs before handing them over.
+
+I would not use this interpreter as a drop-in Python replacement. I would use it as a compact lesson in how to scope a language. Those are different claims, and keeping them separate is what makes the project credible.
+
+## The useful question is not "How much fits?"
+
+The byte count is the hook, but it is not the main result. The real exercise is choosing a semantic core under pressure.
+
+A language is more than its grammar. It has familiar forms, failure behaviour, evaluation rules, and promises about what a program can rely on. A tiny interpreter can preserve a few of those things and discard the rest. Once that choice is visible, the implementation becomes easier to judge.
+
+This is also why rewrites and compatibility layers are harder than they look. A new implementation can reproduce the happy-path syntax and still break the contract in edge cases, errors, ordering, or state. The missing pieces are not automatically unimportant just because the first example runs.
+
+The 1024-byte interpreter does something more honest. It picks a narrow target, builds directly toward it, and leaves the compromises in view. The result is not a smaller CPython. It is a demonstration that the first compiler decision is often a product decision: decide what must remain recognizable, then spend the implementation budget there.
+
+## Source
+
+The constraint, implementation details, and examples come from [Making a Python interpreter in 1024 bytes](https://austinhenley.com/blog/python1024.html).
