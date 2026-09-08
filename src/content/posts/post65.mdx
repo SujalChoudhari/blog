@@ -1,0 +1,29 @@
+---
+title: "The Infamous FileShare"
+date: 2026-09-08
+description: "I built a simple anonymous file-sharing tool, then learned why a frontend cannot be the security boundary."
+tags: ["security", "web", "side-projects", "privacy", "infrastructure"]
+categories: ["Engineering"]
+author: Sujal Choudhari
+draft: false
+---
+
+The infamous FileShare is offline now.
+
+I built it as a simple way to move files between devices without accounts, logins, or unnecessary friction.
+
+The problem was that the frontend was directly connected to the PocketHost database. There was no proper backend layer protecting it. The API was exposed, the important checks lived in the frontend, and anyone who understood the system could interact with it outside the interface.
+
+That was never a strong security model.
+
+Then people started using FileShare for things it was never meant to carry. A small side project suddenly had consequences far beyond what I had planned for.
+
+At that point, keeping it online without being able to properly invest in security was irresponsible.
+
+So I shut it down.
+
+I still love the idea behind FileShare. I just do not want to bring it back in the same form.
+
+Maybe it returns one day, when I have enough money and time to build the security properly.
+
+For now, the infamous FileShare is retired. 😭

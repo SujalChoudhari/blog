@@ -318,5 +318,10 @@
     "id": "post64",
     "lane": "Technical",
     "reason": "Language-design lesson from implementing a Python-shaped interpreter under a 1024-byte C constraint."
+  },
+  {
+    "id": "post65",
+    "lane": "Technical",
+    "reason": "Security lesson from shutting down an anonymous file-sharing tool whose frontend was directly connected to its hosted database."
   }
 ]
