@@ -1,0 +1,85 @@
+---
+title: "The NX Bit Is a Control-Flow Contract"
+date: 2026-09-09
+description: "An ARM hypervisor debugging story shows why executable memory, branch behaviour, and hardware boundaries belong in the same mental model."
+tags: ["arm", "systems", "hypervisors", "security", "debugging"]
+categories: ["Engineering"]
+author: Sujal Choudhari
+draft: false
+---
+
+The NX bit is usually introduced as a security feature. Mark a page non-executable, and an attacker cannot turn data into code.
+
+That explanation is correct, but it is too small.
+
+A guest post on purplesyringa's blog follows a stranger failure: an ARM64 bare-metal hypervisor on a postmarketOS phone that randomly locked up after the hypervisor started intercepting `CTR_EL0`. The watchdog reset the phone. Disabling the watchdog did not make the cause clearer. It only made the wait longer.
+
+The useful lesson is not a new attack technique. It is that executable memory is part of a control-flow contract. The page permissions, cache state, branch instruction, and physical address map all participate in what the processor is allowed to do.
+
+## The bug kept changing shape
+
+The debugging story is good because each reasonable explanation was incomplete.
+
+The exception handler looked correct. It saved the general-purpose registers, handled the trapped system-register access, advanced the saved program counter, restored the registers, and returned with `eret`. Single-stepping the handler in QEMU showed the expected behaviour.
+
+Real hardware disagreed.
+
+The investigation then found a separate issue. The hypervisor sorted an array containing executable machine instructions at runtime. On ARM, instruction and data caches are not automatically coherent in the way the code needed. Sorting the data did not guarantee that later instruction fetches saw the updated bytes. Moving the sorting into the build phase fixed that part, but the phone still did not boot.
+
+This is the kind of failure that makes a feature list useless. The handler was not merely "an exception handler." It was a path through privilege levels, saved state, generated code, cache maintenance, and hardware behaviour. Each layer had a local explanation. The system still failed at the boundaries between them.
+
+## Equivalent code is not always equivalent to the machine
+
+The source describes a particularly uncomfortable reduction.
+
+One implementation read `CTR_EL0` with an inline assembly instruction. Another called a function symbol produced by the linker. A third called through a function pointer into an executable buffer. Two versions looked semantically equivalent in C, but only one worked on the phone.
+
+The working path used a direct branch:
+
+```armasm
+bl get_ctr_el0
+```
+
+The failing path loaded the same target address and used an indirect branch:
+
+```armasm
+blr x0
+```
+
+That distinction mattered. A direct branch has a target encoded in the instruction. An indirect branch gets its target from a register and passes through branch prediction. The post's eventual hypothesis was that speculative execution could touch an invalid or non-executable address during prediction. The architectural instruction sequence could be valid while the microarchitectural path still interacted badly with the memory map.
+
+That is where the NX bit stops looking like a narrow exploit-prevention switch. A non-executable page is also a statement about which control-flow paths are valid. If the processor speculates toward an address that is not mapped or not executable, the result depends on more than the source-level meaning of the call. It depends on page tables, permissions, cache and predictor state, and the exact instructions used to reach the target.
+
+The source does not present this as a universal rule that every indirect call is dangerous. It presents a constrained debugging result on a particular ARM phone and hypervisor. That boundary matters. A systems lesson is useful only when its conditions stay attached.
+
+## The physical machine is part of the program
+
+The first half of the story happened in code and QEMU. The second half happened on a MediaTek phone with Cortex-A53 cores.
+
+That difference is not an annoying deployment detail. It is the environment.
+
+A hypervisor that intercepts a system register is changing the path between guest code, exception state, privileged handlers, and the processor. A handler that looks fine in an emulator can still encounter a cache rule, speculative access, or vendor-specific behaviour that the emulator does not reproduce. The source even describes checking exception logs, patching suspicious kernel instructions, and reducing the failure to a few hot paths before the direct-versus-indirect branch distinction became visible.
+
+This is why I distrust low-level claims based only on source inspection. The source can prove what the author intended. It cannot prove what a particular processor fetched, predicted, cached, or rejected at the moment the system stopped responding.
+
+The right test is not "does the code look equivalent?" It is "which machine-level obligations does each form create?" A function pointer call carries a different control-flow shape from a direct branch. Runtime-sorted code carries a different cache obligation from build-time code. A hardware emulator carries a different evidence boundary from a real phone.
+
+## Security boundaries are also debugging boundaries
+
+The NX bit belongs in security documentation because it blocks a class of code-injection paths. But that is not the whole contract.
+
+When executable memory is involved, the system also needs clear answers to ordinary engineering questions:
+
+- Which addresses are mapped at each privilege level?
+- Which pages may be executed, read, or written?
+- When code bytes change, what makes instruction fetch see the new bytes?
+- Which branches are direct, and which depend on runtime targets?
+- What does the emulator model, and what does the physical processor add?
+
+The ARM hypervisor story is valuable because it refuses to separate those questions too neatly. The final failure was not just about security, or just about caching, or just about a compiler-generated call. It lived in the contract between them.
+
+I would not turn this one phone bug into a general claim about all ARM systems. I would keep the debugging habit: when a low-level system fails, compare the machine-level shape of the working and broken paths, not only their source-level intent. The difference may be one instruction, one cache boundary, or one permission bit. That small difference can be the whole system.
+
+## Source
+
+The debugging story and ARM64 examples come from [The NX bit is not just about security](https://purplesyringa.moe/blog/guest/the-nx-bit-is-not-just-about-security/).

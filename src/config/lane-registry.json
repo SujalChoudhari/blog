@@ -323,5 +323,10 @@
     "id": "post65",
     "lane": "Technical",
     "reason": "Security lesson from shutting down an anonymous file-sharing tool whose frontend was directly connected to its hosted database."
+  },
+  {
+    "id": "post66",
+    "lane": "Technical",
+    "reason": "Systems lesson from an ARM64 hypervisor debugging story about executable memory, cache coherence, branch behaviour, and hardware boundaries."
   }
 ]
