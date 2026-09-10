@@ -1,0 +1,57 @@
+---
+title: "A Browser Bundle Can Be a Credential Store"
+date: 2026-09-10
+description: "A report about exposed Iterable credentials is a reminder that public JavaScript is part of the security boundary, not just a delivery format."
+tags: ["security", "web", "javascript", "apis", "systems"]
+categories: ["Engineering"]
+author: Sujal Choudhari
+draft: false
+---
+
+A browser bundle is public. That sounds obvious until an API key ends up inside one and stays there for four years.
+
+A recent report from The Register describes a researcher who found what appeared to be overprivileged Iterable credentials in an airport group's client-side JavaScript. The researcher claimed that the credentials exposed data connected to 8.8 million customer records and could have enabled mass deletion. The report attributes those claims to the researcher, not to an independent audit I can verify here. That distinction matters. The incident is still a useful engineering lesson even with the evidence boundary kept intact.
+
+The lesson is simple: anything shipped to a browser should be treated as readable by everyone.
+
+## The frontend is not a vault
+
+Frontend code has to cross a boundary. The server sends it to a device the user controls, and the browser executes it there. That makes the bundle inspectable by design. Minification changes the reading experience, not the access model. Obfuscation makes a secret annoying to find, not secret.
+
+An API credential in that bundle is not protected by the fact that most users never open the developer tools. It is protected only if the credential is harmless when copied. A public map key may be acceptable when it is restricted by origin, quota, and capability. A credential that can read customer data or delete records is a different class of thing.
+
+This is where the phrase "frontend key" causes trouble. It makes a credential sound like a special browser-safe species. Usually it is just a server credential that someone placed in a public file and hoped nobody would use.
+
+## The real mistake is not only the key
+
+The report's most alarming detail is the alleged scope of the credential. A secret can leak and still limit the damage if the account behind it has one narrow permission, a short lifetime, and a useful audit trail. A leaked credential with broad read and write access turns an exposed bundle into a control panel.
+
+That changes the design question. The first question is not, "Can a user see this key?" They can. The first question is, "What can this key do after it is copied?"
+
+A browser-facing integration should have a deliberately small answer. It should reach only the operations the browser needs. It should not inherit an account's whole administrative surface because that was the easiest credential to configure. If the browser needs to trigger one operation, put that operation behind a server endpoint with its own authentication, validation, rate limits, and logging.
+
+That is more work than pasting a key into a script. It is also where the boundary becomes visible.
+
+## Public code needs a secret scan
+
+A secret scan should run on the built artifact, not only on the source repository.
+
+That distinction is easy to miss. A token can enter a bundle through an environment-variable mistake, a generated configuration file, a source map, or a dependency's build step. Searching the repository catches some of these paths. Inspecting the files that actually ship catches more of them.
+
+The check does not need to understand every credential format to be useful. It can start with a denylist for known token prefixes, provider names, private hostnames, and high-risk configuration fields. It can reject suspicious long strings. It can compare the output against an allowlist of public values. The important part is that the check runs before deployment and fails the release instead of filing a warning nobody reads.
+
+Rotation is the other half. Once a credential appears in a public bundle, deleting the line does not make the old credential private. It belongs in the incident timeline, and the credential needs to be revoked or rotated. Browser caches, copied bundles, source maps, build logs, and third-party archives all widen the period in which the old value may be available.
+
+## The browser is an honest boundary
+
+I like web systems more when they admit what the browser can and cannot protect.
+
+The browser can hold user state, call a deliberately narrow public endpoint, and present the result. It cannot keep a secret from the person running the browser. It cannot turn a broad service credential into a safe one by hiding the string in a chunk. It cannot enforce a permission model that the server never implemented.
+
+The reported airport incident is a reminder to draw the trust boundary around actual capability, not around the place where a string happens to live. A client-side key is fine only when it is designed to be public. Everything else belongs behind a server-side boundary with limited permissions, rotation, and evidence of use.
+
+That is not a framework rule. It is a property of delivering code to someone else's machine.
+
+## Source
+
+The incident report is [Security boffin claims airport group left API keys in client-side JavaScript for four years](https://www.theregister.com/cyber-crime/2026/09/09/security-boffin-claims-airport-group-left-api-keys-in-client-side-javascript-for-four-years/5295192).

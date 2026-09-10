@@ -328,5 +328,10 @@
     "id": "post66",
     "lane": "Technical",
     "reason": "Systems lesson from an ARM64 hypervisor debugging story about executable memory, cache coherence, branch behaviour, and hardware boundaries."
+  },
+  {
+    "id": "post67",
+    "lane": "Technical",
+    "reason": "Security lesson from exposed client-side API credentials about browser trust boundaries, least privilege, artifact scanning, and rotation."
   }
 ]
