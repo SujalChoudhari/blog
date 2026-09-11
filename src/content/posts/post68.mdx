@@ -1,0 +1,71 @@
+---
+title: "An Agent's Permission Receipt Is Part of the Product"
+date: 2026-09-11
+description: "Meta's Muse shows why an AI agent's permission boundary matters more than how smoothly it completes a task."
+tags: ["ai", "agents", "privacy", "security", "product-design"]
+categories: ["Engineering"]
+author: Sujal Choudhari
+draft: false
+---
+
+An AI agent can complete a task and still leave you wondering whether you should have let it start.
+
+That is the interesting part of The Verge's hands-on report about Meta's Muse. Muse sorted a Gmail inbox, bought a small set of items from Amazon, generated media, and assembled a personalized news feed. The individual tasks were not the story. The permissions were.
+
+Muse used a cloud-based virtual computer to act on connected services. To clean up Gmail, the reviewer gave it permission to access, read, and delete email. To shop, the reviewer linked Amazon and approved the purchase. The work happened. The trust boundary moved.
+
+That boundary should be part of the product, not a sentence in a privacy policy.
+
+## The task is small. The permission is not.
+
+"Delete promotional email" sounds narrow. The permission needed to do it is not necessarily narrow. An agent that can read an inbox and delete messages has access to personal history, receipts, account recovery links, and conversations that have nothing to do with the cleanup task.
+
+The same mismatch appears in shopping. Muse could choose products from a set of preferences, notice other items in the cart, and complete an approved purchase. That is useful. It also means the agent sits between a person and a service that holds an address, payment details, order history, and more.
+
+A task description is not a capability description. Those two things need to be shown separately.
+
+I would rather see an agent present a permission receipt before it acts:
+
+- service: Gmail;
+- actions: read messages and delete selected messages;
+- data used: sender, subject, body, and timestamps;
+- duration: this task only;
+- stop conditions: ambiguous match, bulk deletion, or a request outside the selected folder.
+
+That is not decorative security language. It gives the user something concrete to approve and something concrete to revoke.
+
+## The unsettling feature was not the successful one
+
+The report says Muse also exposed a more uncomfortable boundary. After connecting Instagram and Facebook, it described specific interests that the reviewer could not find in the same form in the visible app settings. Muse said it read them through account API data.
+
+That detail changes the product question. The user is not only asking, "Can this agent do the task?" They are asking, "What can this agent see that I cannot easily see myself?"
+
+An interface can make a permission feel small while the underlying data surface remains large. A single connect button may hide several sources, derived profiles, and background context. The agent may be doing exactly what the integration allows, while the person using it still lacks a readable account of what was available.
+
+This is where agent products need an evidence trail, not just a success message. After an action, the product should show which services it touched, what data categories it used, what it changed, and which steps were stopped or escalated. A green checkmark is not enough when the main risk is invisible access.
+
+## Background work needs foreground accountability
+
+The appeal of Muse is that it handles mundane work in the background. That is also the part that makes mistakes expensive. An agent that waits for confirmation at every click is barely an agent. An agent that acts without showing its authority is a liability with a friendly interface.
+
+The useful middle is not complicated to describe, even if it is hard to build. Give the agent a limited capability for a limited task. Show the boundary before execution. Ask again when the action becomes destructive, costly, or difficult to reverse. Keep a record that the user can inspect afterward.
+
+The important word is limited. "Access Gmail" is not a useful permission. "Read and delete messages in this folder that match these rules, until this task ends" is closer to one.
+
+I also would not treat a successful demo as evidence that the permission model is good. Muse completing a purchase proves that the path works. It does not prove that the account connection is narrow, that the data use is legible, or that revocation works cleanly. Those are separate product claims.
+
+## The agent needs a smaller surface than the service
+
+AI agents make broad integrations feel natural. That is exactly why their capability surface needs more discipline than a normal button.
+
+A button usually performs one known operation. An agent interprets a goal, chooses intermediate steps, reads context, and may discover more context while it works. The user approves the outcome in plain language, but the system executes through permissions that may be much broader.
+
+The design response should be to shrink the agent's authority, not to hide the complexity. Use task-scoped tokens where possible. Separate read, write, delete, and purchase capabilities. Make time limits and spending limits visible. Log the actual data sources, not only the final action. Treat a new connected service as a new trust decision.
+
+Muse's background work is a glimpse of the convenience people want. The unease in the report is a glimpse of the contract the product has not fully explained yet.
+
+An agent should leave behind more than a completed task. It should leave a permission receipt.
+
+## Source
+
+The hands-on report is [Meta's Muse AI works and creeps me out](https://www.theverge.com/tech/993391/meta-muse-hands-on).

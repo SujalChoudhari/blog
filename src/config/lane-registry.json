@@ -333,5 +333,10 @@
     "id": "post67",
     "lane": "Technical",
     "reason": "Security lesson from exposed client-side API credentials about browser trust boundaries, least privilege, artifact scanning, and rotation."
+  },
+  {
+    "id": "post68",
+    "lane": "Technical",
+    "reason": "Engineering argument for task-scoped agent permissions, readable data access, confirmation boundaries, and post-action audit receipts."
   }
 ]
