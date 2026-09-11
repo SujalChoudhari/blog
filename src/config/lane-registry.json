@@ -338,5 +338,10 @@
     "id": "post68",
     "lane": "Technical",
     "reason": "Engineering argument for task-scoped agent permissions, readable data access, confirmation boundaries, and post-action audit receipts."
+  },
+  {
+    "id": "post69",
+    "lane": "Technical",
+    "reason": "Ember progress update on local resource operations, deployment apply, and the boundary between process-local locks and durable control-plane state."
   }
 ]

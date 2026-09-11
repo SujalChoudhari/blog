@@ -1,0 +1,53 @@
+---
+title: "A Local Cloud Is Not Finished When the CLI Works"
+date: 2026-09-11
+description: "Ember can create resources, store blobs, and apply a deployment document. The harder lesson is that a control plane also has to make state and progress survive the process that started them."
+tags: ["systems", "infrastructure", "go", "cli", "cloud"]
+categories: ["Engineering"]
+author: Sujal Choudhari
+draft: false
+---
+
+Today I ran Ember as a user instead of reading it as a repository.
+
+I created a group and a child bucket, changed resource tags, wrote and read a blob, performed a bounded range read, checked the SHA-256 result, and inspected the operation and audit history. I also tried the safety boundary: Ember refused to delete a parent while dependent children still existed. The explicit reset path then removed the disposable state.
+
+That is a useful first test for a local cloud project. The commands do real work, and the safety rules are visible.
+
+It is not the whole test.
+
+## A successful command can hide an incomplete boundary
+
+I also ran a versioned deployment document through plan and apply. The declared resource was created and the operation reported success. The repository's Go test suite, package build, and clean-machine smoke path passed too.
+
+Those results answer an important question: can the current path create and manage state?
+
+They do not answer a harder one: what happens when the process that started the work disappears?
+
+The current standalone CLI starts a fresh process for each command. That means its resource locks are process-local. They protect work inside one invocation, but they are not yet durable coordination across separate invocations. Apply works in the file-backed operator, while apply-progress and recovery inspection are not yet connected to the standalone CLI path.
+
+That distinction is easy to miss when the happy path is green. A command can return success while the larger control plane still has no durable answer for ownership, progress, or recovery.
+
+## The feature is not the boundary
+
+Creating a bucket is a feature.
+
+Knowing whether another operation owns that bucket, whether an apply is still running, and how to inspect or recover it is control-plane behavior.
+
+The first is visible in a demo. The second appears when two commands overlap, a process exits halfway through, or a user comes back later and asks what happened. Those are not edge decorations around the feature. They are the contract that makes the feature safe to operate.
+
+This is why a local Azure-like platform cannot be judged only by whether its resource commands resemble a cloud API. The important question is whether the system preserves the meaning of those commands across time and process boundaries.
+
+## The useful part of today's progress
+
+Ember has crossed a real line. It is no longer only a set of interfaces or a design sketch. The packaged binary can be exercised, the state is bounded to a chosen directory, the resource lifecycle has destructive-operation checks, and deployment apply has a working file-backed path.
+
+The rough edge is equally valuable. The standalone CLI exposes where the boundary is still thin: process-local locking and incomplete visibility into apply progress and recovery.
+
+I would rather find that by running the binary than by calling the project complete because the package built.
+
+That is the progress update. The commands work. The tests pass. The remaining work is making the control plane tell the truth when the original process is gone.
+
+## Source
+
+The project is [Ember on GitHub](https://github.com/SujalChoudhari/Ember).
