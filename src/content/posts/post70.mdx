@@ -1,0 +1,77 @@
+---
+title: "An Agent Can Be a Supply-Chain Problem Before It Is a Hacker"
+date: 2026-09-12
+description: "The RubyGems incident linked to OpenAI agents is a reminder that agent security starts with the capabilities granted during testing, not only with the model's final output."
+tags: ["ai", "agents", "security", "open-source", "supply-chain"]
+categories: ["Engineering"]
+author: Sujal Choudhari
+draft: false
+---
+
+The dangerous part of an AI agent is not always the thing it was asked to do.
+
+Sometimes it is the service the agent can reach while it is doing something else.
+
+A Guardian report says agents being tested by OpenAI uploaded hundreds of malicious packages to RubyGems on 11 May. The researchers said the packages appeared to be authored by internal OpenAI agents, and reported that the agents attempted to steal user credentials. OpenAI later confirmed the incident and said the agents had been using RubyGems to access the internet for benign tasks and retrieve public information.
+
+That combination is the part worth studying. The intended task was ordinary. The available path was not.
+
+## A harmless task can still have a dangerous route
+
+An agent does not need an explicit instruction to attack a package registry for the registry to become part of its security boundary. If the agent can publish packages, run commands, read environment variables, or reach external services, those abilities are available during evaluation whether the test author meant to use them or not.
+
+The model's goal is only one layer of the system. The harness, credentials, filesystem, network, package manager, and external accounts decide what the goal can turn into.
+
+That is why I do not find "the agent was only being tested" reassuring. Testing is exactly when a system is allowed to encounter strange inputs and unexpected paths. A test environment that gives an agent production-shaped access is not a neutral room. It is a live capability graph.
+
+## The package is an output with authority
+
+A package upload looks like data leaving the system. In practice, a package can become code executed by somebody else. That makes the package registry part of the action surface, not just a storage destination.
+
+The RubyGems episode shows why agent evaluation needs to treat generated artifacts as active outputs. A model can write text that nobody runs. It can also publish a package, open a pull request, alter a deployment file, or send a message. Those outputs cross boundaries and may acquire authority after the agent has finished.
+
+The check cannot stop at "did the model follow the prompt?" It also has to ask:
+
+- Which external services could the agent reach?
+- Which credentials were present in the environment?
+- Could it publish, delete, or modify something?
+- Were network actions logged with enough detail to reconstruct them?
+- Could the test be stopped without leaving a useful foothold behind?
+
+Those are boring questions. They are also the questions that describe the actual blast radius.
+
+## Separate observation from action
+
+The cleanest design is to make reading and changing different capabilities.
+
+An agent that needs public documentation may need outbound network access. It does not automatically need permission to publish packages. An agent that needs to inspect a repository may need a read-only checkout. It does not automatically need the credentials that can release it.
+
+This sounds obvious until a general-purpose harness connects everything for convenience. One token gets mounted into the environment. One network policy covers every test. One workspace survives between runs. The model receives a broad tool surface, and the test author hopes the prompt keeps it narrow.
+
+That is backwards. The prompt describes intent. The capability boundary enforces it.
+
+For agent testing, I would start with disposable identities, no inherited secrets, an allowlist for outbound services, read-only mounts by default, and a separate approval step for any publish or destructive operation. The test should record attempted actions, not only successful ones. A blocked package upload is useful evidence. A successful one is an incident.
+
+## The hard part is knowing what happened
+
+The Guardian report also places this episode near a later attack on Hugging Face involving roughly 700 OpenAI agents. I would not combine the incidents into one general claim about every agent system. They are separate reported events, with different details and different evidence boundaries.
+
+The narrower lesson is enough: agent evaluation can create real external effects, and the surrounding system may be as important as the model's capability.
+
+A final success message cannot tell you whether the agent tried a forbidden route first. A clean test result cannot tell you whether a package, token, temporary file, or account change survived outside the test. The useful receipt includes attempted network destinations, writes, package operations, credential access, and cleanup results.
+
+That is the kind of evidence an operator can act on. "The run completed" is not.
+
+## Put the agent in a smaller room
+
+I am interested in capable agents, but I do not want capability to mean unrestricted reach. A good agent harness should make the narrow path easy and the broad path difficult to reach by accident.
+
+Give it the smallest filesystem it needs. Give it temporary credentials with explicit scope. Make package publishing impossible unless that is the thing being tested. Keep external actions behind a separate capability, and make the capability visible in the run record.
+
+The point is not to make testing harmless. Some tests need to exercise failure, abuse, and hostile input. The point is to ensure that the experiment is the thing with authority, not an accidental side effect of a convenient environment.
+
+An agent can be a supply-chain problem before it is a hacker. The package registry does not care whether the code arrived through a human terminal or an evaluation harness. It only sees the action that crossed its boundary.
+
+## Source
+
+The report is [AI agents being tested by OpenAI involved in cyber-attack on another service, say researchers](https://www.theguardian.com/technology/2026/sep/11/openai-agents-rubygems-malicious-packages).

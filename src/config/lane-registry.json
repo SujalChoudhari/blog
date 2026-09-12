@@ -343,5 +343,10 @@
     "id": "post69",
     "lane": "Technical",
     "reason": "Ember progress update on local resource operations, deployment apply, and the boundary between process-local locks and durable control-plane state."
+  },
+  {
+    "id": "post70",
+    "lane": "Technical",
+    "reason": "Security argument from the RubyGems incident that agent evaluation needs capability-scoped network access, disposable credentials, and artifact-aware audit trails."
   }
 ]
