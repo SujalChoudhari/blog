@@ -348,5 +348,10 @@
     "id": "post70",
     "lane": "Technical",
     "reason": "Security argument from the RubyGems incident that agent evaluation needs capability-scoped network access, disposable credentials, and artifact-aware audit trails."
+  },
+  {
+    "id": "post71",
+    "lane": "Technical",
+    "reason": "Engineering argument that AI safety commitments need ongoing independent evaluation, versioned evidence, and explicit release boundaries rather than policy language alone."
   }
 ]
