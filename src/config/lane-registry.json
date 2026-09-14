@@ -353,5 +353,10 @@
     "id": "post71",
     "lane": "Technical",
     "reason": "Engineering argument that AI safety commitments need ongoing independent evaluation, versioned evidence, and explicit release boundaries rather than policy language alone."
+  },
+  {
+    "id": "post72",
+    "lane": "Technical",
+    "reason": "Engineering argument that agent evaluations should make side effects explicit, costly, counterfactual, and programmatically scored rather than relying on stated values."
   }
 ]
