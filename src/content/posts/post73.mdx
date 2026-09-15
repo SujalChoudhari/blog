@@ -1,0 +1,83 @@
+---
+title: "What Ember Actually Is"
+date: 2026-09-15
+description: "Ember is a local-first, single-node platform that borrows useful cloud ideas without pretending to be hosted Azure."
+tags: ["systems", "infrastructure", "cloud", "go", "architecture"]
+categories: ["Engineering"]
+author: Sujal Choudhari
+draft: false
+---
+
+Ember is a local cloud project with a deliberately smaller promise.
+
+It is a private, local-first, single-node platform. It borrows the parts of cloud platforms that are useful for learning and building: resources, scopes, operations, storage, deployments, recovery, and an operator boundary. It does not pretend that a binary on one machine is Azure.
+
+That distinction is the whole point.
+
+## A cloud shape without the cloud account
+
+Most people meet a cloud platform through an account, a web console, or a provider API. The machine running the service is somewhere else. The storage model is somebody else's problem. The platform has already decided how identity, billing, networking, recovery, and upgrades work, even when those decisions are hidden behind a clean button.
+
+Ember brings a smaller version of that problem onto one machine.
+
+The binary keeps bounded state below a directory selected with `--state-dir`, or below `.ember-state` by default. It does not need a cloud account, a hosted control plane, or an external runtime for its local path. The state is visible. The files belong to Ember. Reset removes only the state Ember owns, and destructive actions require explicit confirmation.
+
+This is not an attempt to make local infrastructure look glamorous. It is a way to make the platform's responsibilities harder to ignore.
+
+## Why it is Azure-shaped
+
+The word "Azure-shaped" matters more than "Azure-compatible."
+
+Ember uses a resource hierarchy. A group can own buckets, workloads, and network resources. Resources have scopes, provider metadata, desired and observed state, and bounded inspection paths. Operations have request and correlation identities. A repeated mutation can return the original result instead of applying the same change twice.
+
+Those are useful platform ideas. They give the project a recognizable shape without claiming that Ember speaks Azure's wire protocols or reproduces Azure's hosted services.
+
+The public compatibility boundary is explicit. Ember does not claim Azure REST or ARM compatibility, Azure authentication, subscriptions, tenants, billing, multi-node coordination, distributed locks, or exactly-once delivery. It is not a cheaper Azure account running on a laptop. It is a local operator that uses cloud-like concepts to expose the work behind them.
+
+That restraint makes the project easier to understand. A platform does not become compatible with another platform because its nouns sound familiar.
+
+## Resources are only half the story
+
+Creating a resource is the easy part of a cloud demo. The harder questions begin when something else is already using it, when a request is repeated, or when deletion would destroy a dependency.
+
+Ember's resource model includes hierarchical scopes and read-only ancestor locks. A scoped caller can inspect or mutate only the resources inside its boundary. A parent with dependent children cannot be deleted implicitly. The caller has to remove the leaves first and confirm the destructive action.
+
+That may sound like a lot of ceremony for a one-node project. It is exactly the kind of ceremony that disappears when a platform is judged only by its happy path.
+
+The same idea appears in Blob storage. A bucket owns object metadata and payloads. Writes record size and SHA-256 metadata. Reads can be bounded to a range. Verification reports corruption instead of silently repairing it. Recovery requires trusted content and the expected checksum, then records an audited operation.
+
+The important feature is not that Ember can store a file. A filesystem can do that. The interesting part is the contract around the file: who owns it, how large it may become, how its identity is checked, and what recovery is allowed to change.
+
+## Operations give the platform a memory
+
+A command that returns success is not the same thing as a platform that can explain what happened.
+
+Ember records operations and audit entries with request and correlation identity. Inspection is bounded and scoped. A replayed request can return the original result. That gives a caller a way to distinguish a repeated request from a second mutation.
+
+The same boundary applies to deployment documents. Ember can plan and apply a bounded document, record progress, and expose recovery records. Rollback and forward actions are explicit. Inspection does not secretly perform either one.
+
+This is where Ember stops being a collection of resource commands. It starts asking what a control plane owes the person operating it after the first process exits, after a request is retried, or after an apply stops halfway through.
+
+The project does not solve every distributed-systems problem. It does not claim distributed locks or multi-node coordination. Its resource locks are process-local. That is not a hidden flaw to explain away. It is part of the boundary the project currently names.
+
+## What Ember is not
+
+Ember is not a hosted cloud service.
+
+It is not a drop-in Azure emulator. It does not provide ARM wire compatibility, cloud identity, subscriptions, billing, or a fleet of nodes. It does not turn local files into magically distributed storage. The HTTP adapter and the CLI share an operator contract, but that does not create a production control plane by itself.
+
+It is also not only a command-line toy. The commands are the visible edge of a larger model that includes scopes, idempotency, audit, recovery, quotas, checksums, queues, events, workloads, networking, and observability. Those pieces are useful because they force the project to deal with ownership and failure instead of stopping at create-and-list.
+
+The honest description sits between the two extremes: Ember is a bounded platform laboratory with a runnable local operator.
+
+## The reason to build something this small
+
+Cloud platforms are often discussed as collections of services. Ember is more interesting when viewed as a collection of promises.
+
+A resource should have an owner. A mutation should have an identity. A destructive operation should need confirmation. A stored object should have an integrity check. A deployment should leave progress behind. A recovery action should be explicit. A reset should know which paths it owns.
+
+Those promises do not require a hyperscale fleet to become real. A single-node system can make them visible, test them, and show where its own guarantees stop.
+
+That is what Ember is: a local, Azure-shaped learning platform for the control-plane questions that a service list tends to hide.
+
+The project is [Ember on GitHub](https://github.com/SujalChoudhari/Ember). Its [documentation index](https://github.com/SujalChoudhari/Ember/blob/main/docs/index.md) separates implemented behavior from planned work and records the non-goals.

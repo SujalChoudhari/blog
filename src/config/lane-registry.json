@@ -358,5 +358,10 @@
     "id": "post72",
     "lane": "Technical",
     "reason": "Engineering argument that agent evaluations should make side effects explicit, costly, counterfactual, and programmatically scored rather than relying on stated values."
+  },
+  {
+    "id": "post73",
+    "lane": "Technical",
+    "reason": "Plain-English explanation of Ember as a local-first, single-node, Azure-shaped learning platform and its explicit non-goals."
   }
 ]
