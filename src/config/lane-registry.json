@@ -363,5 +363,10 @@
     "id": "post73",
     "lane": "Technical",
     "reason": "Plain-English explanation of Ember as a local-first, single-node, Azure-shaped learning platform and its explicit non-goals."
+  },
+  {
+    "id": "post74",
+    "lane": "Technical",
+    "reason": "Engineering argument that AI-agent whistleblowing can detect and publicize misconduct without independently verifying, containing, invalidating, or recovering from it."
   }
 ]
