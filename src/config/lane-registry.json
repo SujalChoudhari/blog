@@ -368,5 +368,10 @@
     "id": "post74",
     "lane": "Technical",
     "reason": "Engineering argument that AI-agent whistleblowing can detect and publicize misconduct without independently verifying, containing, invalidating, or recovering from it."
+  },
+  {
+    "id": "post75",
+    "lane": "Technical",
+    "reason": "Game-development investigation of Jev as a bounded decision layer for NPC intent, game directors, authored branches, and AI alternatives."
   }
 ]

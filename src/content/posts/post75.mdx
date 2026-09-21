@@ -1,0 +1,192 @@
+---
+title: "Jev for Game Developers: Let It Choose, Do Not Let It Write"
+date: 2026-09-21
+description: "Jev is more interesting as a bounded decision layer for NPCs, game directors, and authored branches than as another chatbot bolted onto a game."
+tags: ["jev", "game development", "game ai", "npc", "ai", "systems"]
+categories: ["Engineering"]
+author: Sujal Choudhari
+draft: false
+---
+
+I would not use Jev to write my NPC's dialogue.
+
+I would use it to decide whether that NPC has earned the right to make the player's next thirty seconds harder.
+
+That is the game-development angle that makes Jev interesting. It is not a chatbot pretending to be a character. TypeSafe describes Jev as a model that receives state and typed questions, then returns structured answers that software can use. Its primitives include bounded choices and ordered scores instead of a paragraph that the game has to parse and trust.
+
+That shape fits a game loop better than another model that wants to explain itself.
+
+## Let the model choose an intention
+
+Imagine an enemy with this state:
+
+```text
+health: 32
+ammo: 4
+distance_to_player: 18m
+cover_available: true
+ally_down: true
+objective: protect_hostage
+```
+
+The game does not need a poem from the enemy. It needs a decision.
+
+```text
+Choice: attack, flank, retreat, revive_ally, take_cover
+Score: urgency from 0 to 4
+Noul: can_attack_safely?
+```
+
+Jev can sit at that boundary. It chooses an intention. The game engine still owns navigation, animation, aiming, collision, weapons, damage, and the actual state transition.
+
+That separation matters. The model does not get to invent an action called `teleport_behind_player` because it sounded clever. The action space is authored. The engine decides whether the selected action is legal.
+
+This is not a replacement for a behaviour tree or a utility system in every game. It is another way to choose among bounded decisions when the state is messy enough that hand-written weights become painful to maintain.
+
+## A harder enemy is not the same as a random enemy
+
+A hard enemy is not one that cheats. It is one that sees a situation, commits to a plan, and does not fall apart when the player changes the situation.
+
+Jev could help choose between a small set of authored intentions:
+
+- push while the player is reloading;
+- retreat because the enemy is exposed;
+- call another unit before entering the room;
+- protect a wounded ally;
+- stop chasing and return to the objective;
+- spend a limited ability now or save it for a better moment.
+
+The interesting part is not the model's personality. It is the pressure between the options.
+
+Give the enemy limited ammunition, a vulnerable objective, a damaged ally, and a route that can be cut off. Then ask the decision layer which intention fits the state. The game still runs the plan. The model only chooses the next bounded commitment.
+
+If the result is bad, you can inspect the state and the question. If the game has a behaviour tree with twenty-seven exceptions, the equivalent mistake is often harder to locate. That does not make Jev automatically better. It makes the decision boundary easier to name.
+
+## The game director can use the same boundary
+
+The same idea works one level above the NPC.
+
+A game director might ask:
+
+```text
+Choice: spawn_patrol, offer_resource, increase_pressure, reveal_hint, wait
+Score: tension from 0 to 4
+Noul: does_the_player_need_a_recovery_window?
+```
+
+The state can include recent deaths, resource levels, time since the last encounter, missed tutorial actions, and whether the player has found the route forward.
+
+Again, the result is not a generated level. It is a bounded decision that selects from content the game team already designed.
+
+That gives the director more room to react without handing the whole game to a text model. It also gives the team something to test. You can replay the same state, change one variable, and see whether the decision changes for a reason you can understand.
+
+## Dialogue should remain authored
+
+Jev can choose a dialogue branch. It should not be responsible for writing the dialogue unless you deliberately add another model and accept another failure boundary.
+
+For example:
+
+```text
+Choice: reassure, threaten, bargain, reveal_secret, remain_silent
+Score: trust from 0 to 4
+Noul: is_the_player_ready_for_the_revelation?
+```
+
+The game then selects a line written by the narrative team.
+
+This is a useful division of labour. Jev helps decide which authored branch fits the current state. A language model can generate text, but generated text brings its own problems: continuity, tone, length, lore, safety, latency, and the question of whether the line is even allowed at that point in the story.
+
+A good game does not need every part of itself to be generative. It needs the right part to remain controllable.
+
+## The public demos are exciting, but they are still demos
+
+The public Jev ecosystem already has game and real-time experiments, including community pages for games and reports of Jev-driven game loops. A secondary write-up describes a DOOM demonstration running a decision loop at roughly 10 Hz, with the game exposing internal state and receiving actions such as moving or firing.
+
+That is a useful proof of possibility. It is not proof that a hosted decision API belongs in a shipped combat loop.
+
+A real game has network failures, jitter, retries, rate limits, cost ceilings, server authority, pause behaviour, replays, and players who do not wait politely for a model response. Frame-by-frame movement and physics should remain local and deterministic. A model can choose an intention at a slower boundary. It should not become the hidden owner of the simulation.
+
+The distinction is simple:
+
+- Jev can choose `flank`.
+- The engine must decide whether `flank` is legal.
+- Navigation must find a route.
+- Animation must show it.
+- Physics must resolve it.
+- The network must replicate it.
+- The replay system must record it.
+
+One decision does not replace the rest of the game.
+
+## Where the open-source alternatives fit
+
+Jev is a hosted proprietary model. If the interesting part is the interface pattern rather than access to TypeSafe's model, there are open projects worth testing.
+
+[SemIf](https://github.com/TheoLeeCJ/SemIf) describes itself as an open reproduction of the typed-decision pattern using open models. [OpenJev](https://github.com/zhihz/openjev) is another independent project inspired by Jev and explicitly does not contain TypeSafe's proprietary code or weights. [FOQ](https://foq.fr/) positions itself as an open-source alternative with local benchmark scripts.
+
+None of these should be described as the official Jev running locally. They are alternatives to test, not interchangeable evidence.
+
+For a game developer, local execution has obvious advantages:
+
+- offline development and play;
+- predictable ownership of game state;
+- no request leaving the machine;
+- no per-decision API bill;
+- easier replay and deterministic test harnesses;
+- the ability to change the model without changing the game-facing contract.
+
+It also creates work. You own the model, hardware, serving stack, calibration, performance, and failure behaviour. A local model that returns a decision quickly is not automatically a good decision model.
+
+## The prototype I would actually build
+
+I would start with one arena, one enemy, and five possible intentions:
+
+1. attack;
+2. take cover;
+3. flank;
+4. retreat;
+5. revive an ally.
+
+Then I would run the same state corpus through four versions:
+
+- a hand-written behaviour tree;
+- a utility-AI baseline;
+- Jev;
+- one local open alternative such as SemIf or OpenJev.
+
+I would measure:
+
+- decision latency;
+- invalid or impossible actions;
+- repeatability under the same state;
+- behaviour changes when one state variable changes;
+- player deaths and encounter completion;
+- fallback behaviour when the model is unavailable;
+- cost or local hardware use;
+- how easy it is to explain a bad decision after a replay.
+
+That comparison would tell me more than a demo where an agent appears clever for thirty seconds.
+
+## The boundary I would keep
+
+Jev is not a complete game AI. It is not a replacement for navigation, animation, physics, authored writing, or deterministic simulation.
+
+It is interesting because games already contain many decisions with a small, typed action space. An NPC can attack, retreat, flank, heal, or wait. A director can increase pressure, give a resource, reveal a hint, or leave the player alone. A quest can branch, but only among branches the designers have written and tested.
+
+That is where Jev belongs: at the decision boundary, before execution and after state.
+
+Let it choose.
+
+Do not let it quietly become the game.
+
+## Sources
+
+- [TypeSafe AI documentation](https://docs.typesafe.ai/)
+- [Choice](https://docs.typesafe.ai/primitives/choice)
+- [Score](https://docs.typesafe.ai/primitives/score)
+- [Introducing System One Models and Jev](https://typesafe.ai/blog/introducing-system-one-models-and-jev)
+- [Games and real-time Jev projects](https://madewithjev.com/categories/games-and-real-time)
+- [Secondary report on Jev game-loop demonstrations](https://lilting.ch/en/articles/typesafe-jev-system-one-model)
+- [SemIf](https://github.com/TheoLeeCJ/SemIf)
+- [OpenJev](https://github.com/zhihz/openjev)
+- [FOQ](https://foq.fr/)
