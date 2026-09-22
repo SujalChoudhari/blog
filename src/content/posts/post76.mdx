@@ -1,0 +1,162 @@
+---
+title: "Skills Without the .md"
+date: 2026-09-22
+description: "A human skill is more than a procedure file. Here is what SKILL.md packages make faster, what they leave out, and why the best agent workflows keep human judgement in the loop."
+tags: ["ai", "agents", "skills", "human-factors", "developer-tools"]
+categories: ["Engineering"]
+author: Sujal Choudhari
+draft: false
+---
+
+A human skill is not a file.
+
+A file can tell an agent to inspect the output, preserve the source, run the tests, and stop when the evidence is missing. That is useful. It is also not the same thing as knowing when the situation is unlike the example in the file.
+
+That difference is the part of the current agent-skills excitement that interests me.
+
+The question is not whether humans or Markdown wins. The question is what each one is actually good at.
+
+## What a human skill carries
+
+A person who has done a job for years does not carry only a checklist.
+
+They carry a history of attempts, corrections, exceptions, smells, timing, and consequences. They know that a sentence can be technically correct and still be wrong for the reader. They know that a test can pass while the artifact is stale. They know when a familiar workflow has entered unfamiliar territory.
+
+That is close to what Michael Polanyi was getting at with tacit knowledge: people can often recognize and perform more than they can fully explain as explicit rules. Ericsson's work on deliberate practice adds another piece. Expertise is not just stored information. It grows through focused work, repetition, and feedback.
+
+A written procedure can preserve part of that history. It cannot automatically preserve the judgement that decided which part mattered.
+
+This is why a senior engineer can look at a failure and say, "That is not the real problem," before they can explain exactly why. The sentence is not magic. It is accumulated contact with similar failures.
+
+It can also be wrong. Human expertise is biased, inconsistent, and sometimes just folklore that survived because nobody tested it.
+
+The point is narrower: a procedure file is not a replacement for the feedback loop that made someone capable.
+
+## What a SKILL.md file actually is
+
+The public Agent Skills specification defines a skill as a directory with a required `SKILL.md` and optional scripts, references, assets, and other resources.
+
+That is more precise than saying that an LLM "reads a Markdown file."
+
+A skill system has several separate steps:
+
+1. **Discovery:** the host finds the skill and reads its metadata.
+2. **Activation:** the host decides that the skill is relevant.
+3. **Loading:** the instructions enter the model's context, or the model gets a way to read them.
+4. **Execution:** scripts, tools, templates, and checks run under the host's permissions.
+
+A file sitting in a repository does none of this by itself.
+
+The host agent has to implement the lifecycle. It has to decide where skills live, how they are trusted, how conflicts are handled, what gets loaded, and what happens when a referenced script or resource is missing. The standard gives the package a shape. It does not give every agent the same runtime semantics.
+
+That distinction matters because a `SKILL.md` file is not the complete skill. It is the human-readable part of a skill package and one possible control surface for the runtime around it.
+
+## What the file makes faster
+
+A good skill package is very good at repeatable work.
+
+It can keep a team from re-explaining the same workflow every morning. It can say which tool to call first, what evidence to preserve, which files are allowed to change, what a successful output should contain, and which checks must run before a result is reported.
+
+That is valuable for work such as:
+
+- preparing a document in a known format;
+- running a release checklist;
+- reviewing a pull request against project rules;
+- extracting data from a PDF;
+- checking a generated artifact;
+- producing the same report shape for every run;
+- handing a procedure from one agent or person to another.
+
+This is the real win. A procedure becomes easier to copy, inspect, version, and test.
+
+The file also keeps an expert's process from disappearing when the expert is unavailable. That is not a small benefit. Organisational memory is often just somebody's private sequence of steps that nobody else knows exists.
+
+## Faster is conditional
+
+The phrase "just load the skill" hides a cost.
+
+The Agent Skills specification recommends progressive disclosure: load a small name and description first, load the full instructions when the skill is activated, and load references or scripts only when needed.
+
+That is the right instinct. Loading every procedure into every request would turn a reusable system into a very large system prompt.
+
+Long-context research gives the same warning from another direction. *Lost in the Middle* found that models can use information less reliably when it sits in the middle of a long context. RULER found that strong performance on simple retrieval tests did not guarantee strong performance on more complex long-context tasks as input length grew.
+
+Those studies do not directly measure `SKILL.md` files. They do support a design rule:
+
+> Keep the always-on context small. Load the procedure that matters. Move detail into references and scripts. Do not confuse a larger context with a smarter agent.
+
+A skill can make an agent faster by removing repeated explanation. It can also make an agent slower by adding irrelevant instructions, conflicting rules, long examples, and stale references.
+
+## A file does not create judgement
+
+Suppose a skill says:
+
+```text
+Inspect the exception before deciding whether the workflow succeeded.
+```
+
+That is a good instruction. But what counts as an exception? Which evidence changes the decision? When is a clean-looking result suspicious? Which part of the workflow should stop when the source is missing?
+
+Those questions are where judgement begins.
+
+A model may follow the words. It may also follow them mechanically, over-apply them, ignore them, or report that it did them without producing the expected artifact. That is why OpenAI's public skill-evaluation guidance treats skills like software artifacts: test activation, traces, commands, generated files, token use, command thrashing, builds, permissions, and repository state.
+
+The completion message is not the skill. The checked result is closer to the skill's real behavior.
+
+Scripts improve this boundary when the work is mechanical. A script can calculate a hash, validate a file, inspect a page count, or run a build more reliably than prose can. But the script still needs permissions, dependencies, a safe input, and a human decision about whether its result answers the real question.
+
+## Do not call every memory a skill
+
+The word "skill" is now covering several different mechanisms.
+
+- A Markdown file is explicit instruction.
+- A script-backed skill is a procedure with executable machinery.
+- An executable library, like the skill library in Voyager, stores programs that an agent can retrieve and reuse.
+- Reflexion stores verbal reflections from previous attempts.
+- A memory system retrieves past information into the current context.
+- Model weights store patterns learned during training.
+
+These are not interchangeable.
+
+They differ in determinism, inspection, permissions, reversibility, and failure modes. Calling all of them a skill makes the architecture sound simpler than it is.
+
+If a procedure can delete data, publish a release, spend money, or change a production system, the important question is not whether it is written in Markdown. The important questions are: who can activate it, what can it call, what evidence does it leave, and who can stop or reverse it?
+
+## What practitioners are arguing about
+
+Developer discussions keep returning to the same tension.
+
+One group wants small always-on instructions and detailed skills loaded only when relevant. Another group finds fragmented retrieval unreliable and prefers larger macro-skills that keep related rules together. Both sides are responding to a real problem: context is limited, and an agent can lose the thread when the instruction system becomes too large or too scattered.
+
+There is also a quieter disagreement about what a skill is for. Some people treat it as a reusable prompt. Others treat it as a package containing procedures, scripts, references, assets, and checks. The second version is more useful, but it also creates more maintenance work.
+
+A stale Markdown file is not harmless documentation if an agent uses it to make a real change.
+
+## What wins?
+
+Human skill wins when the situation is ambiguous, novel, social, ethical, or poorly specified. It wins when someone has to notice that the procedure no longer fits and accept responsibility for changing it.
+
+A `SKILL.md` package wins when the work is repeatable, bounded, easy to describe, and easy to verify. It wins at handoffs, onboarding, checklists, output formats, and the boring steps that people forget.
+
+The best system does not try to download a human into a file.
+
+It externalizes the repeatable part. It leaves judgement and exception handling visible. It connects instructions to executable checks. It evaluates traces and artifacts instead of trusting fluent completion messages. It gives a human a clear place to stop the workflow, revise the procedure, or say that the original problem was misunderstood.
+
+A skill file can preserve a procedure.
+
+It cannot inherit the life that taught someone when the procedure no longer fits.
+
+## Sources
+
+- [Agent Skills specification](https://github.com/agentskills/agentskills/blob/main/docs/specification.mdx)
+- [Agent Skills client implementation guide](https://github.com/agentskills/agentskills/blob/main/docs/client-implementation/adding-skills-support.mdx)
+- [OpenAI skills documentation](https://developers.openai.com/plugins/concepts/skills)
+- [OpenAI skill evaluation guidance](https://developers.openai.com/blog/eval-skills)
+- [Anthropic: Effective context engineering for AI agents](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents)
+- [Lost in the Middle](https://aclanthology.org/2024.tacl-1.9/)
+- [RULER long-context evaluation](https://arxiv.org/html/2404.06654)
+- [The Tacit Dimension](https://books.google.com/books?vid=isbn038506988X&redir_esc=n)
+- [The Role of Deliberate Practice](https://doi.org/10.1037/0033-295X.100.3.363)
+- [Voyager](https://arxiv.org/html/2305.16291)
+- [Reflexion](https://arxiv.org/html/2303.11366)
+- [Model Context Protocol tools](https://modelcontextprotocol.io/specification/2025-06-18/server/tools)

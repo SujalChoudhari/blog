@@ -373,5 +373,10 @@
     "id": "post75",
     "lane": "Technical",
     "reason": "Game-development investigation of Jev as a bounded decision layer for NPC intent, game directors, authored branches, and AI alternatives."
+  },
+  {
+    "id": "post76",
+    "lane": "Technical",
+    "reason": "Comparison of human expertise with SKILL.md procedure packages, including tacit knowledge, progressive disclosure, runtime activation, context cost, and validation."
   }
 ]
