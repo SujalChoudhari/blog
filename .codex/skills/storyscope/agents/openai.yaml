@@ -1,0 +1,4 @@
+interface:
+  display_name: "Storyscope"
+  short_description: "Write and publish technical blog essays"
+  default_prompt: "Write a well-sourced post for this repository in the established editorial voice."
