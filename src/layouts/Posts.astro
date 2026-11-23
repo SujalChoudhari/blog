@@ -1,19 +1,85 @@
 ---
 import type { CollectionEntry } from "astro:content";
 import dateFormat from "@/lib/utils/dateFormat";
+import publicAsset from "@/lib/utils/publicAsset";
+import stockCovers from "@/config/stock-covers.json";
 
-const { posts, className } = Astro.props;
+interface Props {
+  posts: CollectionEntry<"posts">[];
+  className?: string;
+  showExcerpt?: boolean;
+}
+
+const { posts, className, showExcerpt = false } = Astro.props;
 ---
 
-<div class={`${className ?? ""}`}>
+<div class={className}>
   <ul class="post-list">
-    {posts.map((post: CollectionEntry<"posts">) => (
-      <li class="post-list-item">
-        <span class="meta-line">{dateFormat(post.data.date!)}</span>
-        <span class="title-line">
-          <a href={`/${post.id}`}>{post.data.title}</a>
-        </span>
-      </li>
-    ))}
+    {posts.map((post) => {
+      const image = post.data.image;
+      const thumbnail = publicAsset(image) ?? (image?.startsWith("https://") ? image : (Object.hasOwn(stockCovers, post.id.replace(/\.mdx?$/, "")) ? `/images/stock/${post.id.replace(/\.mdx?$/, "")}.jpg` : undefined));
+      return (
+        <li class="archive-entry">
+          <a class="archive-link" href={`/${post.id}`}>
+            {thumbnail && (
+              <img src={thumbnail} alt="" width="112" height="76" loading="lazy" decoding="async" />
+            )}
+            <span class="archive-text">
+              {post.data.date && <time datetime={post.data.date.toISOString()}>{dateFormat(post.data.date)}</time>}
+              <span class="archive-title">{post.data.title}</span>
+              {showExcerpt && post.data.description && <span class="archive-excerpt">{post.data.description}</span>}
+            </span>
+            {/* ArrowUpRight from Lucide (ISC license). */}
+            <svg class="archive-arrow" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M7 7h10v10" />
+              <path d="M7 17 17 7" />
+            </svg>
+          </a>
+        </li>
+      );
+    })}
   </ul>
 </div>
+
+<style>
+  .archive-entry { border-bottom: 1px solid var(--rule); }
+  .archive-link {
+    display: flex;
+    align-items: center;
+    gap: clamp(.75rem, 3vw, 2rem);
+    padding: clamp(1rem, 2.5vw, 1.75rem) clamp(.5rem, 1.5vw, 1rem);
+    text-decoration: none;
+    transition: background-color .2s ease, color .2s ease;
+  }
+  .archive-link:hover, .archive-link:focus-visible { background: var(--paper-raised); }
+  .archive-link img {
+    flex: none;
+    display: block;
+    width: clamp(3.5rem, 12vw, 7rem);
+    height: auto;
+    aspect-ratio: 28 / 19;
+    object-fit: cover;
+    border: 1px solid var(--rule);
+  }
+  .archive-text { flex: 1; min-width: 0; display: grid; gap: .5rem; }
+  time {
+    font: 400 .72rem/1.3 var(--mono);
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .archive-title {
+    font: 800 clamp(1rem, 2.3vw, 1.5rem)/1.2 var(--sans);
+    letter-spacing: -.025em;
+    overflow-wrap: anywhere;
+    transition: color .25s ease;
+  }
+  .archive-excerpt { color: var(--muted); font-size: .9rem; line-height: 1.5; }
+  .archive-arrow { flex: none; color: var(--muted); transition: color .25s ease; }
+  .archive-link:is(:hover, :focus-visible) :is(.archive-title, .archive-arrow) {
+    color: var(--accent);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .archive-link, .archive-title, .archive-arrow { transition: none; }
+  }
+</style>
