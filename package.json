@@ -3,8 +3,8 @@
   "version": "3.0.0",
   "license": "MIT",
   "scripts": {
-    "dev": "astro dev --port 3000",
-    "build": "astro build",
+    "dev": "node scripts/prepare-stock-covers.mjs && astro dev --port 3000",
+    "build": "node scripts/prepare-stock-covers.mjs && astro build",
     "preview": "astro preview"
   },
   "dependencies": {

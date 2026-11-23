@@ -3,6 +3,7 @@ import config from "@/config/config.json";
 import Base from "@/layouts/Base.astro";
 import Posts from "@/layouts/Posts.astro";
 import { getSinglePage } from "@/lib/contentParser.astro";
+import type { CollectionEntry } from "astro:content";
 import { sortByDate } from "@/lib/utils/sortFunctions";
 import laneRegistry from "@/config/lane-registry.json";
 
@@ -11,242 +12,185 @@ const publishedPosts = posts.filter((p: any) => !p.id.startsWith("-index") && p.
 const sortedPosts = sortByDate(publishedPosts);
 
 type LaneKeys = "Technical" | "Writing" | "Life";
-const lanes: Record<LaneKeys, any[]> = {
+const lanes: Record<LaneKeys, CollectionEntry<"posts">[]> = {
   Technical: [],
   Writing: [],
   Life: []
 };
 
-let registryIds = new Set(laneRegistry.map(r => r.id));
-let valid = true;
-let totalMapped = 0;
-
-if (registryIds.size !== 77) valid = false;
-if (registryIds.has("post18")) valid = false;
-
-sortedPosts.forEach((post: any) => {
-  const pureId = post.id.replace(/\.mdx?$/, '');
-  const entry = laneRegistry.find(r => r.id === pureId);
-  if (!entry || !lanes[entry.lane as LaneKeys]) {
-    valid = false;
-  } else {
-    lanes[entry.lane as LaneKeys].push(post);
-    totalMapped++;
-  }
-});
-
-if (totalMapped !== 77) valid = false;
-if (!valid) {
-  throw new Error("Invalid lane mapping");
-}
-
-const ITEMS_PER_PAGE = 10;
 const laneNames: LaneKeys[] = ["Technical", "Writing", "Life"];
+const laneById = new Map(laneRegistry.map(({ id, lane }) => [id, lane]));
+for (const post of sortedPosts) {
+  const category = laneById.get(post.id.replace(/\.mdx?$/, ""))?.toLowerCase();
+  const lane = laneNames.find((name) => name.toLowerCase() === category)
+    ?? laneNames.find((name) => post.data.categories.some(
+      (category: string) => category.toLowerCase() === name.toLowerCase(),
+    ))
+    ?? "Technical";
+  lanes[lane].push(post);
+}
+const BATCH_SIZE = 8;
 ---
 
 <Base title={config.site.title}>
-  <section class="section home-section">
-    <div class="container home-container">
-      <header class="home-header">
-        <h1>Writing</h1>
-        <p>Notes on software, systems, and making things.</p>
-      </header>
-
-      <div class="controls-container">
-        <div role="tablist" class="lane-tabs" aria-label="Content Lanes">
-          {laneNames.map(laneName => (
-            <button
-              role="tab"
-              aria-selected={laneName === "Technical" ? "true" : "false"}
-              aria-controls={`panel-${laneName}`}
-              id={`tab-${laneName}`}
-            >
-              {laneName}
-            </button>
+  <section class="recent" aria-labelledby="recent-heading">
+    <header class="recent-heading">
+      <h1 id="recent-heading">Recent posts</h1>
+      <p>Notes on software, books, and making things.</p>
+    </header>
+    <Posts posts={sortedPosts.slice(0, 3)} showExcerpt />
+  </section>
+  <section class="archive" aria-labelledby="archive-heading">
+    <div class="archive-main">
+      <header class="archive-heading">
+        <h2 id="archive-heading">Archive</h2>
+        <nav class="archive-nav" aria-label="Post categories">
+          {laneNames.map((name) => (
+            <a href={`#${name.toLowerCase()}`} data-category={name.toLowerCase()}>{name}</a>
           ))}
-        </div>
-      </div>
-
-      <div class="lane-panels">
-        {laneNames.map(laneName => {
-          const lanePosts = lanes[laneName];
-          const pages = [];
-          for(let i = 0; i < lanePosts.length; i += ITEMS_PER_PAGE) {
-            pages.push(lanePosts.slice(i, i + ITEMS_PER_PAGE));
-          }
-          const isInitialLane = laneName === 'Technical';
-
-          return (
-            <div
-              role="tabpanel"
-              id={`panel-${laneName}`}
-              aria-labelledby={`tab-${laneName}`}
-              hidden={!isInitialLane}
-              class="lane-panel"
-            >
-              {pages.map((pagePosts, pageIndex) => (
-                <div
-                  class="lane-page"
-                  data-page={pageIndex + 1}
-                  hidden={pageIndex !== 0}
-                >
-                  <Posts posts={pagePosts} />
-                </div>
-              ))}
-
-              {pages.length > 1 && (
-                <div class="pagination-controls" aria-label={`Pagination for ${laneName}`}>
-                  {pages.map((_, i) => (
-                    <button
-                      class="page-btn"
-                      data-target-page={i + 1}
-                      aria-current={i === 0 ? "page" : undefined}
-                    >
-                      Page {i + 1}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
+        </nav>
+      </header>
+      {laneNames.map((name) => {
+        const entries = lanes[name];
+        return (
+          <section id={name.toLowerCase()} class="archive-lane" aria-label={name}>
+            <Posts posts={entries.slice(0, BATCH_SIZE)} />
+            {entries.length > BATCH_SIZE && (
+              <>
+                {Array.from({ length: Math.ceil(entries.length / BATCH_SIZE) - 1 }, (_, index) => (
+                  <template data-older>
+                    <Posts posts={entries.slice((index + 1) * BATCH_SIZE, (index + 2) * BATCH_SIZE)} />
+                  </template>
+                ))}
+                <button type="button" class="load-older">
+                  Load older posts <span>({entries.length - BATCH_SIZE})</span>
+                </button>
+                <p class="archive-status" role="status"></p>
+              </>
+            )}
+          </section>
+        );
+      })}
     </div>
   </section>
 </Base>
 
 <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const tabs = document.querySelectorAll('.lane-tabs button[role="tab"]');
-    const panels = document.querySelectorAll('.lane-panel');
+  const links = Array.from(document.querySelectorAll<HTMLAnchorElement>("[data-category]"));
+  const lanes = Array.from(document.querySelectorAll<HTMLElement>(".archive-lane"));
+  const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
+  const reveal = (element: HTMLElement, distance = 20) => {
+    if (!reducedMotion.matches) {
+      element.animate([{ opacity: 0, transform: `translateY(${distance}px)` }, { opacity: 1, transform: "translateY(0)" }],
+        { duration: 800, easing: "cubic-bezier(.21,.45,.32,.9)" });
+    }
+  };
+  function showCategory(animate = false) {
+    const id = location.hash.slice(1);
+    const active = lanes.find((lane) => lane.id === id) ?? lanes[0];
+    for (const lane of lanes) lane.hidden = lane !== active;
+    for (const link of links) {
+      if (link.dataset.category === active.id) link.setAttribute("aria-current", "location");
+      else link.removeAttribute("aria-current");
+    }
+    if (animate) reveal(active);
+  }
+  window.addEventListener("hashchange", () => showCategory(true));
+  showCategory();
 
-    tabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        tabs.forEach(t => t.setAttribute('aria-selected', 'false'));
-        panels.forEach(p => p.setAttribute('hidden', ''));
-
-        tab.setAttribute('aria-selected', 'true');
-        const controlsId = tab.getAttribute('aria-controls');
-        const activePanel = document.getElementById(controlsId);
-        if (activePanel) {
-          activePanel.removeAttribute('hidden');
-
-          const pages = activePanel.querySelectorAll('.lane-page');
-          const pageBtns = activePanel.querySelectorAll('.page-btn');
-          pages.forEach(p => {
-            if(p.getAttribute('data-page') === '1') p.removeAttribute('hidden');
-            else p.setAttribute('hidden', '');
-          });
-          pageBtns.forEach(btn => {
-            if(btn.getAttribute('data-target-page') === '1') btn.setAttribute('aria-current', 'page');
-            else btn.removeAttribute('aria-current');
-          });
-        }
-      });
+  for (const lane of lanes) {
+    const button = lane.querySelector<HTMLButtonElement>(".load-older");
+    const status = lane.querySelector(".archive-status");
+    const list = lane.querySelector(".post-list");
+    if (!button || !status || !list) continue;
+    button.addEventListener("click", () => {
+      const next = lane.querySelector<HTMLTemplateElement>("template[data-older]");
+      if (!next) return;
+      const items = Array.from(next.content.querySelectorAll<HTMLElement>("li"));
+      list.append(...items);
+      next.remove();
+      items.forEach((item) => reveal(item));
+      items[0]?.querySelector("a")?.focus();
+      const remaining = Array.from(lane.querySelectorAll<HTMLTemplateElement>("template[data-older]"))
+        .reduce((count, template) => count + template.content.querySelectorAll("li").length, 0);
+      const counter = button.querySelector("span");
+      if (counter) counter.textContent = `(${remaining})`;
+      button.hidden = remaining === 0;
+      status.textContent = remaining ? `${items.length} older posts loaded.` : "All posts loaded.";
     });
+  }
 
-    const pageBtns = document.querySelectorAll('.page-btn');
-    pageBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        const panel = btn.closest('.lane-panel');
-        if (!panel) return;
-        const targetPage = btn.getAttribute('data-target-page');
-
-        const panelBtns = panel.querySelectorAll('.page-btn');
-        panelBtns.forEach(b => {
-          if(b === btn) b.setAttribute('aria-current', 'page');
-          else b.removeAttribute('aria-current');
-        });
-
-        const pages = panel.querySelectorAll('.lane-page');
-        pages.forEach(p => {
-          if(p.getAttribute('data-page') === targetPage) p.removeAttribute('hidden');
-          else p.setAttribute('hidden', '');
-        });
-      });
-    });
-  });
 </script>
 
 <style>
-  .home-container {
-    max-width: 860px;
+  :global(.site-header), :global(.site-footer), .recent, .archive {
+    width: min(calc(100% - clamp(2rem, 8vw, 6rem)), 68rem);
+    margin-inline: auto;
   }
-
-  .home-header {
-    margin-bottom: 2.25rem;
-    padding-bottom: 1.5rem;
-    border-bottom: 1px solid var(--rule);
-  }
-
-  .home-header h1 {
-    margin-bottom: 0.55rem;
-  }
-
-  .home-header p {
-    max-width: 36rem;
+  .recent { padding-top: clamp(1.75rem, 4vw, 3.5rem); }
+  .recent-heading { margin-bottom: 1.25rem; }
+  .recent-heading h1, .archive-heading h2 {
+    font-family: var(--sans);
+    font-weight: 900;
+    letter-spacing: -.05em;
+    line-height: 1.08;
     margin: 0;
-    color: var(--muted);
-    font-family: var(--serif);
-    font-size: 1.18rem;
   }
-
-  .controls-container {
-    margin-bottom: 2rem;
-  }
-
-  .lane-tabs {
+  .recent-heading h1 { font-size: clamp(2.25rem, 5vw, 3.75rem); }
+  .recent-heading p { color: var(--muted); margin: .6rem 0 0; }
+  .recent :global(.post-list) { display: grid; gap: .75rem; border: 0; }
+  .recent :global(.archive-entry) { border: 1px solid var(--rule); background: #0a0a0a; min-width: 0; }
+  .recent :global(.archive-entry:hover),
+  .recent :global(.archive-entry:focus-within) { border-color: var(--portfolio-red); }
+  .recent :global(.archive-link) { height: 100%; padding: clamp(.75rem, 2vw, 1.25rem); }
+  .recent :global(.archive-excerpt) { overflow-wrap: anywhere; }
+  .recent :global(.archive-entry:first-child .archive-title) { font-size: clamp(1.35rem, 3vw, 2.25rem); }
+  .archive { padding-block: clamp(2rem, 5vw, 3.5rem); }
+  .archive-heading {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem;
+    align-items: center;
+    justify-content: space-between;
+    gap: .9rem 1.5rem;
+    margin-bottom: 1rem;
   }
-
-  .lane-tabs button {
-    padding: 0.35rem 0.85rem;
-    background: transparent;
+  .archive-heading h2 { font-size: clamp(1.65rem, 4vw, 2.5rem); }
+  .archive-nav { display: flex; flex-wrap: wrap; gap: .4rem; }
+  .archive-nav a, .load-older {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    min-height: 44px;
     border: 1px solid var(--rule);
-    color: var(--muted);
-    cursor: pointer;
-    font-family: var(--sans);
-    font-size: 0.95rem;
-    border-radius: 4px;
-  }
-
-  .lane-tabs button[aria-selected="true"] {
-    background: var(--ink);
-    color: var(--paper-raised);
-    border-color: var(--ink);
-  }
-
-  .lane-tabs button:focus-visible,
-  .pagination-controls .page-btn:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-  }
-
-  .pagination-controls {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-top: 1.5rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid var(--rule);
-  }
-
-  .pagination-controls .page-btn {
-    padding: 0.25rem 0.65rem;
-    background: transparent;
-    border: 1px solid var(--rule);
-    color: var(--muted);
-    cursor: pointer;
-    font-family: var(--sans);
-    font-size: 0.85rem;
-    border-radius: 4px;
-  }
-
-  .pagination-controls .page-btn[aria-current="page"] {
-    background: #e9e5dd;
+    padding: .55rem .8rem;
     color: var(--ink);
-    border-color: var(--muted);
+    font: .75rem var(--mono);
+    text-decoration: none;
+    background: #0a0a0a;
+  }
+  .archive-nav a:hover, .load-older:hover { border-color: var(--ink); }
+  .archive-nav a[aria-current] { background: var(--portfolio-red); color: white; border-color: var(--portfolio-red); }
+  .archive-lane { scroll-margin-top: 1rem; }
+  .archive-lane :global(.archive-link) { padding: .8rem .25rem; }
+  .archive-lane :global(.archive-link img) { width: clamp(3.25rem, 10vw, 5rem); }
+  .load-older { margin-top: 1rem; cursor: pointer; }
+  .load-older[hidden] { display: none; }
+  .archive-status { color: var(--muted); font: .75rem var(--mono); margin-top: .7rem; }
+  @media (min-width: 820px) {
+    .recent :global(.post-list) { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); }
+    .recent :global(.archive-entry:first-child) { grid-row: span 2; }
+    .recent :global(.archive-entry:first-child .archive-link) { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-content: start; }
+    .recent :global(.archive-entry:first-child img) { grid-column: 1 / -1; width: 100%; aspect-ratio: 16 / 6; }
+    .recent :global(.archive-entry:not(:first-child) img) { width: 4rem; }
+  }
+  @media (max-width: 520px) {
+    :global(.site-nav) { flex-direction: row; flex-wrap: wrap; align-items: center; }
+    :global(.site-header) { padding-block: .5rem; }
+    .archive-nav { width: 100%; }
+    .archive-nav a { flex: 1; padding-inline: .35rem; }
+    .recent :global(.archive-link) { gap: .65rem; align-items: flex-start; }
+    .recent :global(.archive-link img) { width: 3.25rem; }
+    .load-older { width: 100%; }
   }
 </style>

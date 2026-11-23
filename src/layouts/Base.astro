@@ -72,25 +72,39 @@ const socialImage = new URL(socialPath, config.site.base_url).href;
         ],
       },
     })} />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;600;700;800;900&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap" />
     <style is:global>
       :root {
-        color-scheme: light;
-        --paper: #f7f4ee;
-        --paper-raised: #fffdf8;
-        --ink: #211f1b;
-        --muted: #716d65;
-        --rule: #d9d3c9;
-        --accent: #9b4f32;
-        --accent-dark: #773a26;
+        color-scheme: dark;
+        --paper: #080808;
+        --paper-raised: #181818;
+        --ink: #edebe5;
+        --muted: #a9a5a0;
+        --rule: #333;
+        --portfolio-red: #b91c1c;
+        --accent: #ef6666;
+        --accent-dark: #ff8d8d;
         --serif: ui-serif, Georgia, Cambria, "Times New Roman", serif;
-        --sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        --sans: "Epilogue", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       }
 
       *,
       *::before,
       *::after {
         box-sizing: border-box;
+      }
+
+      html ::selection {
+        background-color: var(--portfolio-red);
+        color: #fff;
+      }
+
+      html :is(.accent-text, a:hover, .site-nav-links [aria-current])::selection,
+      html .accent-text *::selection,
+      html .archive-link:is(:hover, :focus-visible) .archive-title::selection {
+        background-color: #fff;
+        color: var(--portfolio-red);
       }
 
       html {
@@ -273,7 +287,7 @@ const socialImage = new URL(socialPath, config.site.base_url).href;
       }
 
       .content {
-        color: #302d28;
+        color: #d5d1ca;
         font-family: var(--serif);
         font-size: clamp(1.08rem, 1.25vw, 1.18rem);
         line-height: 1.82;
@@ -333,7 +347,7 @@ const socialImage = new URL(socialPath, config.site.base_url).href;
 
       .content :not(pre) > code {
         padding: 0.08em 0.28em;
-        background: #e9e5dd;
+        background: var(--paper-raised);
       }
 
       .content ul,
@@ -460,6 +474,59 @@ const socialImage = new URL(socialPath, config.site.base_url).href;
           animation-duration: 0.01ms !important;
           animation-iteration-count: 1 !important;
         }
+      }
+      .site-title, .post-list-item .title-line a {
+        font-family: var(--sans);
+        font-weight: 700;
+      }
+
+      .site-nav-links a, .site-footer, .post-meta, .post-list-item .meta-line {
+        font-family: var(--mono);
+      }
+
+      .home-section .home-header {
+        padding-block: clamp(1rem, 5vw, 4rem) clamp(2rem, 5vw, 3rem);
+        border-top: 3px solid #b91c1c;
+      }
+
+      .home-section .home-header h1 {
+        font-family: var(--sans);
+        font-size: clamp(2.8rem, 12vw, 8rem);
+        font-weight: 900;
+        letter-spacing: -0.075em;
+        line-height: 1;
+        text-transform: uppercase;
+      }
+
+      .home-section .home-header p {
+        font-family: var(--mono);
+        font-size: 0.95rem;
+      }
+
+      .home-section .lane-tabs button,
+      .home-section .pagination-controls .page-btn {
+        min-height: 44px;
+        border-radius: 0;
+        font-family: var(--mono);
+      }
+
+      .home-section .pagination-controls .page-btn[aria-current="page"] {
+        background: var(--ink);
+        color: var(--paper);
+      }
+
+      .post-list-item {
+        align-items: baseline;
+        padding-block: 1.25rem;
+      }
+
+      .post-list-item .title-line a {
+        overflow-wrap: anywhere;
+      }
+
+      .post-list-item:focus-within,
+      .post-list-item:hover {
+        border-bottom-color: var(--accent);
       }
     </style>
   </head>
