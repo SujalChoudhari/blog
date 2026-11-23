@@ -1,7 +1,8 @@
 {
   "main": [
     { "name": "Home", "url": "/" },
-    { "name": "Art", "url": "https://art.sujal.xyz/" }
+    { "name": "Art", "url": "https://art.sujal.xyz/" },
+    { "name": "Portfolio", "url": "https://sujal.xyz/" }
   ],
   "footer": []
 }
