@@ -280,9 +280,15 @@ const socialImage = new URL(socialPath, config.site.base_url).href;
         font-family: var(--mono);
         font-size: 0.72rem;
         padding: 0.05rem 0.3rem;
-        background: #e9e5dd;
+        background: #252525;
+        border: 1px solid var(--rule);
         border-radius: 3px;
         color: var(--muted);
+      }
+
+      #search-modal[hidden],
+      .search-overlay[hidden] {
+        display: none !important;
       }
 
       .site-nav-links a:hover,
