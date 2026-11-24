@@ -7,13 +7,13 @@
   class="search-overlay"
   hidden
   aria-hidden="true"
-  style="display: none;"
+  style="display: none !important;"
   role="dialog"
   aria-modal="true"
   aria-label="Search posts"
 >
-  <div class="search-backdrop" id="search-backdrop"></div>
-  <div class="search-dialog">
+  <div class="search-backdrop" id="search-backdrop" aria-hidden="true"></div>
+  <div class="search-dialog" id="search-dialog">
     <header class="search-header">
       <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <circle cx="11" cy="11" r="8"></circle>
@@ -28,8 +28,11 @@
         spellcheck="false"
         aria-label="Search posts"
       />
-      <button type="button" id="search-close" class="search-close" aria-label="Close search">
-        <kbd class="kbd-hint">ESC</kbd>
+      <button type="button" id="search-close" class="search-close" aria-label="Close search (Esc)" title="Close search (Esc)">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
       </button>
     </header>
 
@@ -73,6 +76,7 @@
 
   function initSearch() {
     const modal = document.getElementById("search-modal");
+    const dialog = document.getElementById("search-dialog");
     const backdrop = document.getElementById("search-backdrop");
     const input = document.getElementById("search-input") as HTMLInputElement | null;
     const closeBtn = document.getElementById("search-close");
@@ -85,13 +89,13 @@
     // Guarantee closed state on init
     modal.setAttribute("hidden", "");
     modal.classList.remove("is-open");
-    modal.style.display = "none";
+    modal.style.setProperty("display", "none", "important");
     modal.setAttribute("aria-hidden", "true");
 
     function openModal() {
       modal.removeAttribute("hidden");
       modal.classList.add("is-open");
-      modal.style.display = "flex";
+      modal.style.setProperty("display", "flex", "important");
       modal.setAttribute("aria-hidden", "false");
       document.body.style.overflow = "hidden";
       loadSearchData();
@@ -101,7 +105,7 @@
     function closeModal() {
       modal.setAttribute("hidden", "");
       modal.classList.remove("is-open");
-      modal.style.display = "none";
+      modal.style.setProperty("display", "none", "important");
       modal.setAttribute("aria-hidden", "true");
       document.body.style.overflow = "";
       input.value = "";
@@ -114,23 +118,56 @@
       emptyMsg.textContent = "Type keywords to search posts...";
     }
 
-    searchTriggers.forEach((btn) => btn.addEventListener("click", openModal));
-    if (backdrop) backdrop.addEventListener("click", closeModal);
-    if (closeBtn) closeBtn.addEventListener("click", closeModal);
-
-    // Keyboard shortcut (Cmd+K or Ctrl+K or /)
-    window.addEventListener("keydown", (e) => {
-      const isOpen = modal.classList.contains("is-open") && !modal.hasAttribute("hidden");
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
-        e.preventDefault();
-        if (isOpen) closeModal();
-        else openModal();
-      } else if (e.key === "Escape" && isOpen) {
-        e.preventDefault();
-        closeModal();
-      } else if (e.key === "/" && !isOpen && document.activeElement?.tagName !== "INPUT" && document.activeElement?.tagName !== "TEXTAREA") {
+    // Triggers to open
+    searchTriggers.forEach((btn) => {
+      btn.addEventListener("click", (e) => {
         e.preventDefault();
         openModal();
+      });
+    });
+
+    // Close button click
+    if (closeBtn) {
+      closeBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        closeModal();
+      });
+    }
+
+    // Close on backdrop or overlay click outside dialog
+    if (backdrop) {
+      backdrop.addEventListener("click", (e) => {
+        e.preventDefault();
+        closeModal();
+      });
+    }
+
+    modal.addEventListener("click", (e) => {
+      if (dialog && !dialog.contains(e.target as Node)) {
+        closeModal();
+      }
+    });
+
+    // Keyboard shortcuts
+    window.addEventListener("keydown", (e) => {
+      const isVisible = modal.classList.contains("is-open") || !modal.hasAttribute("hidden") || modal.style.display === "flex";
+
+      if (e.key === "Escape") {
+        if (isVisible) {
+          e.preventDefault();
+          closeModal();
+        }
+      } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        if (isVisible) closeModal();
+        else openModal();
+      } else if (e.key === "/" && !isVisible) {
+        const tag = (document.activeElement?.tagName || "").toLowerCase();
+        if (tag !== "input" && tag !== "textarea") {
+          e.preventDefault();
+          openModal();
+        }
       }
     });
 
@@ -193,6 +230,12 @@
     });
 
     input.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        closeModal();
+        return;
+      }
+
       const items = list.querySelectorAll(".search-result-link");
       if (items.length === 0) return;
 
@@ -234,7 +277,7 @@
 
 <style>
   .search-overlay {
-    display: none;
+    display: none !important;
     position: fixed;
     inset: 0;
     z-index: 1000;
@@ -243,19 +286,19 @@
     padding: clamp(1rem, 5vw, 4rem) 1rem;
   }
 
+  .search-overlay.is-open {
+    display: flex !important;
+  }
+
   .search-overlay[hidden],
   .search-overlay:not(.is-open) {
     display: none !important;
   }
 
-  .search-overlay.is-open {
-    display: flex !important;
-  }
-
   .search-backdrop {
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.75);
+    background: rgba(0, 0, 0, 0.8);
     backdrop-filter: blur(4px);
   }
 
@@ -265,18 +308,19 @@
     max-height: 80vh;
     background: var(--paper-raised, #181818);
     border: 1px solid var(--rule, #333);
-    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.7);
     border-radius: 4px;
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    z-index: 10;
   }
 
   .search-header {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    padding: 1rem 1.25rem;
+    padding: 0.85rem 1.15rem;
     border-bottom: 1px solid var(--rule, #333);
     background: var(--paper, #080808);
   }
@@ -304,23 +348,23 @@
 
   .search-close {
     background: transparent;
-    border: none;
+    border: 1px solid transparent;
     cursor: pointer;
-    padding: 0;
+    padding: 0.35rem;
     display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted, #a9a5a0);
+    border-radius: 4px;
+    transition: color 0.15s, border-color 0.15s, background-color 0.15s;
+    min-width: 36px;
+    min-height: 36px;
   }
 
-  .kbd-hint,
-  .search-footer kbd {
-    display: inline-block;
-    padding: 0.15rem 0.45rem;
-    font-family: var(--mono);
-    font-size: 0.75rem;
-    line-height: 1;
-    color: var(--muted, #a9a5a0);
-    background: #252525;
-    border: 1px solid var(--rule, #333);
-    border-radius: 3px;
+  .search-close:hover {
+    color: var(--ink, #edebe5);
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--rule, #333);
   }
 
   .search-results-container {
@@ -402,5 +446,17 @@
     border-top: 1px solid var(--rule, #333);
     font-size: 0.78rem;
     color: var(--muted, #a9a5a0);
+  }
+
+  .search-footer kbd {
+    display: inline-block;
+    padding: 0.15rem 0.45rem;
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    line-height: 1;
+    color: var(--muted, #a9a5a0);
+    background: #252525;
+    border: 1px solid var(--rule, #333);
+    border-radius: 3px;
   }
 </style>
