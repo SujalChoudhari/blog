@@ -2,6 +2,7 @@
 import config from "@/config/config.json";
 import Header from "@/layouts/partials/Header.astro";
 import Footer from "@/layouts/partials/Footer.astro";
+import SearchModal from "@/layouts/components/SearchModal.astro";
 import publicAsset from "@/lib/utils/publicAsset";
 
 interface Props {
@@ -251,6 +252,37 @@ const socialImage = new URL(socialPath, config.site.base_url).href;
         color: var(--muted);
         font-size: 0.88rem;
         text-decoration: none;
+      }
+
+      .search-trigger-btn {
+        min-height: 32px;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        padding: 0.2rem 0.6rem;
+        margin-left: 0.4rem;
+        background: transparent;
+        border: 1px solid var(--rule);
+        border-radius: 4px;
+        color: var(--muted);
+        font-family: var(--sans);
+        font-size: 0.82rem;
+        cursor: pointer;
+        transition: color 0.15s, border-color 0.15s;
+      }
+
+      .search-trigger-btn:hover {
+        color: var(--accent-dark);
+        border-color: var(--accent);
+      }
+
+      .header-kbd {
+        font-family: var(--mono);
+        font-size: 0.72rem;
+        padding: 0.05rem 0.3rem;
+        background: #e9e5dd;
+        border-radius: 3px;
+        color: var(--muted);
       }
 
       .site-nav-links a:hover,
@@ -537,5 +569,6 @@ const socialImage = new URL(socialPath, config.site.base_url).href;
       <slot />
     </main>
     <Footer />
+    <SearchModal />
   </body>
 </html>
