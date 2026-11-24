@@ -52,6 +52,7 @@ const postsCollection = defineCollection({
     author: z.string().optional(),
     authors: z.array(z.string()).default(["Sujal Choudhari"]),
     tags: z.array(z.string()).default(["others"]),
+    lane: z.enum(["Technical", "Writing", "Life"]).optional(),
     draft: z.boolean().optional(),
   }),
 });

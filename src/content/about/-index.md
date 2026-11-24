@@ -1,7 +1,7 @@
 ---
 title: "I’m Sujal Choudhari, a Software Engineer based in Mumbai, currently at Dwarkadas J. Sanghvi College of Engineering"
 meta_title: "About"
-image: "/images/author.png"
+image: "/images/authors/author.png"
 draft: false
 
 what_i_do:
@@ -17,6 +17,6 @@ what_i_do:
       description: "Building efficient and scalable software solutions tailored to meet specific client needs."
 ---
 
-As a third-year Information Technology student at Dwarkadas J. Sanghvi College of Engineering, I have over five years of programming experience. My preferred languages are C++, Python, and TypeScript. I have also published books on Amazon and Gumroad.
+As a final-year Information Technology student at Dwarkadas J. Sanghvi College of Engineering, I have over five years of programming experience. My preferred languages are C++, Python, and TypeScript. I have also published books on Amazon and Gumroad.
 
 For more information, visit my personal website: [sujal.xyz](https://sujal.xyz/)

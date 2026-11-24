@@ -3,9 +3,11 @@
   "version": "3.0.0",
   "license": "MIT",
   "scripts": {
-    "dev": "node scripts/prepare-stock-covers.mjs && astro dev --port 3000",
+    "dev": "node scripts/prepare-stock-covers.mjs && astro dev --port 3001",
     "build": "node scripts/prepare-stock-covers.mjs && astro build",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "check": "node scripts/prepare-stock-covers.mjs && astro build",
+    "post:new": "node scripts/new-post.mjs"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.5",

@@ -22,8 +22,9 @@ const laneNames: LaneKeys[] = ["Technical", "Writing", "Life"];
 const laneById = new Map(laneRegistry.map(({ id, lane }) => [id, lane]));
 for (const post of sortedPosts) {
   const category = laneById.get(post.id.replace(/\.mdx?$/, ""))?.toLowerCase();
-  const lane = laneNames.find((name) => name.toLowerCase() === category)
-    ?? laneNames.find((name) => post.data.categories.some(
+  const lane = (post.data?.lane as LaneKeys)
+    ?? laneNames.find((name) => name.toLowerCase() === category)
+    ?? laneNames.find((name) => post.data.categories?.some(
       (category: string) => category.toLowerCase() === name.toLowerCase(),
     ))
     ?? "Technical";
