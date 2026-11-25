@@ -10,7 +10,7 @@
   style="display: none !important;"
   role="dialog"
   aria-modal="true"
-  aria-label="Search posts"
+  aria-label="Search essays"
 >
   <div class="search-backdrop" id="search-backdrop" aria-hidden="true"></div>
   <div class="search-dialog" id="search-dialog">
@@ -20,13 +20,13 @@
         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
       </svg>
       <input
-        type="search"
+        type="text"
         id="search-input"
         class="search-input"
-        placeholder="Search 78+ essays, systems, topics... (Esc to close)"
+        placeholder="Search 78+ essays, systems, code, art... (Esc to close)"
         autocomplete="off"
         spellcheck="false"
-        aria-label="Search posts"
+        aria-label="Search essays"
       />
       <button type="button" id="search-close" class="search-close" aria-label="Close search (Esc)" title="Close search (Esc)">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -36,42 +36,173 @@
       </button>
     </header>
 
+    <div id="search-meta-bar" class="search-meta-bar" hidden style="display: none;">
+      <span id="search-count-text" class="search-count-text"></span>
+      <span class="search-relevance-hint">Ranked by relevance</span>
+    </div>
+
     <div id="search-results-container" class="search-results-container">
-      <div id="search-empty" class="search-message">Type keywords to search posts...</div>
+      <div id="search-empty" class="search-message">
+        <div class="search-empty-title">Explore essays & technical notes</div>
+        <p class="search-empty-sub">Search across titles, topics, code patterns, and writings.</p>
+        <div class="search-chips-label">Popular topics:</div>
+        <div class="search-chips">
+          <button type="button" class="search-chip" data-search-chip="systems">systems</button>
+          <button type="button" class="search-chip" data-search-chip="agents">agents</button>
+          <button type="button" class="search-chip" data-search-chip="ai">ai</button>
+          <button type="button" class="search-chip" data-search-chip="c++">c++</button>
+          <button type="button" class="search-chip" data-search-chip="go">go</button>
+          <button type="button" class="search-chip" data-search-chip="art">art</button>
+          <button type="button" class="search-chip" data-search-chip="hackathons">hackathons</button>
+          <button type="button" class="search-chip" data-search-chip="writing">writing</button>
+        </div>
+      </div>
       <ul id="search-results-list" class="search-results-list" role="listbox" hidden style="display: none;"></ul>
     </div>
 
     <footer class="search-footer">
-      <span><kbd>↑</kbd> <kbd>↓</kbd> to navigate</span>
-      <span><kbd>↵</kbd> to select</span>
-      <span><kbd>ESC</kbd> to close</span>
+      <div class="search-shortcuts">
+        <span><kbd>↑</kbd> <kbd>↓</kbd> navigate</span>
+        <span><kbd>↵</kbd> select</span>
+        <span><kbd>ESC</kbd> close</span>
+      </div>
     </footer>
   </div>
 </div>
 
 <script>
-  let searchData: Array<{
+  import Fuse from "fuse.js";
+
+  interface SearchItem {
     id: string;
     title: string;
     description: string;
     tags: string[];
     categories: string[];
+    lane?: string;
     date: string;
-  }> | null = null;
+    content?: string;
+  }
 
+  let searchData: SearchItem[] | null = null;
+  let fuseInstance: Fuse<SearchItem> | null = null;
   let activeIndex = -1;
 
-  async function loadSearchData() {
-    if (searchData) return searchData;
+  async function loadSearchData(): Promise<SearchItem[]> {
+    if (searchData && fuseInstance) return searchData;
     try {
       const res = await fetch("/search.json");
       if (res.ok) {
         searchData = await res.json();
+        if (searchData && Array.isArray(searchData)) {
+          fuseInstance = new Fuse(searchData, {
+            includeScore: true,
+            includeMatches: true,
+            threshold: 0.35,
+            ignoreLocation: true,
+            minMatchCharLength: 2,
+            shouldSort: true,
+            keys: [
+              { name: "title", weight: 4 },
+              { name: "tags", weight: 3 },
+              { name: "categories", weight: 2 },
+              { name: "description", weight: 2 },
+              { name: "content", weight: 1 },
+            ],
+          });
+        }
       }
     } catch (e) {
       console.error("Failed to load search index", e);
     }
     return searchData || [];
+  }
+
+  function escapeHtml(str: string): string {
+    return str
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  function escapeRegex(str: string): string {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+
+  function formatDate(dateStr: string): string {
+    if (!dateStr) return "";
+    const parts = dateStr.split("-");
+    if (parts.length !== 3) return dateStr;
+    const year = parts[0];
+    const monthNum = parseInt(parts[1], 10) - 1;
+    const day = parseInt(parts[2], 10);
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    if (monthNum >= 0 && monthNum < 12) {
+      return `${months[monthNum]} ${day}, ${year}`;
+    }
+    return dateStr;
+  }
+
+  function highlightWithMatches(
+    text: string,
+    indices?: readonly [number, number][],
+    fallbackQuery?: string
+  ): string {
+    if (!text) return "";
+    if (indices && indices.length > 0) {
+      const sorted = [...indices].sort((a, b) => a[0] - b[0]);
+      const merged: [number, number][] = [];
+      for (const [start, end] of sorted) {
+        if (merged.length === 0) {
+          merged.push([start, end]);
+        } else {
+          const last = merged[merged.length - 1];
+          if (start <= last[1] + 1) {
+            last[1] = Math.max(last[1], end);
+          } else {
+            merged.push([start, end]);
+          }
+        }
+      }
+
+      let html = "";
+      let lastIndex = 0;
+      for (const [start, end] of merged) {
+        if (start > lastIndex) {
+          html += escapeHtml(text.slice(lastIndex, start));
+        }
+        html += `<mark class="search-highlight">${escapeHtml(text.slice(start, end + 1))}</mark>`;
+        lastIndex = end + 1;
+      }
+      if (lastIndex < text.length) {
+        html += escapeHtml(text.slice(lastIndex));
+      }
+      return html;
+    }
+
+    if (fallbackQuery) {
+      const tokens = fallbackQuery
+        .trim()
+        .split(/\s+/)
+        .filter((t) => t.length >= 2)
+        .map(escapeRegex);
+      if (tokens.length > 0) {
+        const regex = new RegExp(`(${tokens.join("|")})`, "gi");
+        const parts = text.split(regex);
+        return parts
+          .map((part) => {
+            if (tokens.some((t) => new RegExp(`^${t}$`, "i").test(part))) {
+              return `<mark class="search-highlight">${escapeHtml(part)}</mark>`;
+            }
+            return escapeHtml(part);
+          })
+          .join("");
+      }
+    }
+
+    return escapeHtml(text);
   }
 
   function initSearch() {
@@ -82,6 +213,8 @@
     const closeBtn = document.getElementById("search-close");
     const list = document.getElementById("search-results-list");
     const emptyMsg = document.getElementById("search-empty");
+    const metaBar = document.getElementById("search-meta-bar");
+    const countText = document.getElementById("search-count-text");
     const searchTriggers = document.querySelectorAll("[data-open-search]");
 
     if (!modal || !input || !list || !emptyMsg) return;
@@ -92,14 +225,26 @@
     modal.style.setProperty("display", "none", "important");
     modal.setAttribute("aria-hidden", "true");
 
-    function openModal() {
+    // Load search data eagerly in background
+    loadSearchData();
+
+    function openModal(initialQuery?: string) {
       modal.removeAttribute("hidden");
       modal.classList.add("is-open");
       modal.style.setProperty("display", "flex", "important");
       modal.setAttribute("aria-hidden", "false");
       document.body.style.overflow = "hidden";
       loadSearchData();
-      setTimeout(() => input.focus(), 60);
+
+      setTimeout(() => {
+        input.focus();
+        if (initialQuery) {
+          input.value = initialQuery;
+          renderResults(initialQuery);
+        } else {
+          input.select();
+        }
+      }, 50);
     }
 
     function closeModal() {
@@ -110,13 +255,51 @@
       document.body.style.overflow = "";
       input.value = "";
       activeIndex = -1;
+
+      if (metaBar) {
+        metaBar.setAttribute("hidden", "");
+        metaBar.style.display = "none";
+      }
+
       list.setAttribute("hidden", "");
       list.style.display = "none";
       list.innerHTML = "";
+
       emptyMsg.removeAttribute("hidden");
       emptyMsg.style.display = "block";
-      emptyMsg.textContent = "Type keywords to search posts...";
+      emptyMsg.innerHTML = `
+        <div class="search-empty-title">Explore essays & technical notes</div>
+        <p class="search-empty-sub">Search across titles, topics, code patterns, and writings.</p>
+        <div class="search-chips-label">Popular topics:</div>
+        <div class="search-chips">
+          <button type="button" class="search-chip" data-search-chip="systems">systems</button>
+          <button type="button" class="search-chip" data-search-chip="agents">agents</button>
+          <button type="button" class="search-chip" data-search-chip="ai">ai</button>
+          <button type="button" class="search-chip" data-search-chip="c++">c++</button>
+          <button type="button" class="search-chip" data-search-chip="go">go</button>
+          <button type="button" class="search-chip" data-search-chip="art">art</button>
+          <button type="button" class="search-chip" data-search-chip="hackathons">hackathons</button>
+          <button type="button" class="search-chip" data-search-chip="writing">writing</button>
+        </div>
+      `;
+      wireChips();
     }
+
+    function wireChips() {
+      const chips = emptyMsg.querySelectorAll("[data-search-chip]");
+      chips.forEach((chip) => {
+        chip.addEventListener("click", (e) => {
+          e.preventDefault();
+          const topic = (chip as HTMLElement).dataset.searchChip || "";
+          if (topic) {
+            input.value = topic;
+            input.focus();
+            renderResults(topic);
+          }
+        });
+      });
+    }
+    wireChips();
 
     // Triggers to open
     searchTriggers.forEach((btn) => {
@@ -135,7 +318,7 @@
       });
     }
 
-    // Close on backdrop or overlay click outside dialog
+    // Close on backdrop click
     if (backdrop) {
       backdrop.addEventListener("click", (e) => {
         e.preventDefault();
@@ -172,57 +355,210 @@
     });
 
     function renderResults(query: string) {
-      if (!searchData) return;
-      const q = query.toLowerCase().trim();
+      const q = query.trim();
+
       if (!q) {
+        if (metaBar) {
+          metaBar.setAttribute("hidden", "");
+          metaBar.style.display = "none";
+        }
         list.setAttribute("hidden", "");
         list.style.display = "none";
         list.innerHTML = "";
         emptyMsg.removeAttribute("hidden");
         emptyMsg.style.display = "block";
-        emptyMsg.textContent = "Type keywords to search posts...";
+        emptyMsg.innerHTML = `
+          <div class="search-empty-title">Explore essays & technical notes</div>
+          <p class="search-empty-sub">Search across titles, topics, code patterns, and writings.</p>
+          <div class="search-chips-label">Popular topics:</div>
+          <div class="search-chips">
+            <button type="button" class="search-chip" data-search-chip="systems">systems</button>
+            <button type="button" class="search-chip" data-search-chip="agents">agents</button>
+            <button type="button" class="search-chip" data-search-chip="ai">ai</button>
+            <button type="button" class="search-chip" data-search-chip="c++">c++</button>
+            <button type="button" class="search-chip" data-search-chip="go">go</button>
+            <button type="button" class="search-chip" data-search-chip="art">art</button>
+            <button type="button" class="search-chip" data-search-chip="hackathons">hackathons</button>
+            <button type="button" class="search-chip" data-search-chip="writing">writing</button>
+          </div>
+        `;
+        wireChips();
         activeIndex = -1;
         return;
       }
 
-      const results = searchData.filter((item) => {
-        return (
-          item.title.toLowerCase().includes(q) ||
-          item.description.toLowerCase().includes(q) ||
-          item.tags.some((t) => t.toLowerCase().includes(q)) ||
-          item.categories.some((c) => c.toLowerCase().includes(q))
-        );
-      }).slice(0, 8);
+      if (!fuseInstance && searchData) {
+        fuseInstance = new Fuse(searchData, {
+          includeScore: true,
+          includeMatches: true,
+          threshold: 0.35,
+          ignoreLocation: true,
+          minMatchCharLength: 2,
+          shouldSort: true,
+          keys: [
+            { name: "title", weight: 4 },
+            { name: "tags", weight: 3 },
+            { name: "categories", weight: 2 },
+            { name: "description", weight: 2 },
+            { name: "content", weight: 1 },
+          ],
+        });
+      }
 
-      if (results.length === 0) {
+      let searchResults: Array<{
+        item: SearchItem;
+        matches?: readonly Fuse.FuseResultMatch[];
+        score?: number;
+      }> = [];
+
+      if (fuseInstance) {
+        const rawResults = fuseInstance.search(q);
+        searchResults = rawResults
+          .filter((res) => (res.score ?? 1) <= 0.80)
+          .slice(0, 10);
+      } else if (searchData) {
+        // Fallback if Fuse is still loading
+        const lowerQ = q.toLowerCase();
+        searchResults = searchData
+          .filter(
+            (item) =>
+              item.title.toLowerCase().includes(lowerQ) ||
+              item.description.toLowerCase().includes(lowerQ) ||
+              item.tags.some((t) => t.toLowerCase().includes(lowerQ))
+          )
+          .slice(0, 10)
+          .map((item) => ({ item }));
+      }
+
+      if (searchResults.length === 0) {
+        if (metaBar) {
+          metaBar.setAttribute("hidden", "");
+          metaBar.style.display = "none";
+        }
         list.setAttribute("hidden", "");
         list.style.display = "none";
         list.innerHTML = "";
         emptyMsg.removeAttribute("hidden");
         emptyMsg.style.display = "block";
-        emptyMsg.textContent = `No essays found matching "${query}"`;
+        emptyMsg.innerHTML = `
+          <div class="search-no-results">
+            <div class="search-empty-title">No essays found for <span class="search-query-highlight">"${escapeHtml(q)}"</span></div>
+            <p class="search-empty-sub">Try searching for broader keywords like <code>systems</code>, <code>ai</code>, <code>c++</code>, or <code>writing</code>.</p>
+          </div>
+        `;
         activeIndex = -1;
         return;
       }
 
+      // Display results
       emptyMsg.setAttribute("hidden", "");
       emptyMsg.style.display = "none";
+
+      if (metaBar && countText) {
+        metaBar.removeAttribute("hidden");
+        metaBar.style.display = "flex";
+        const count = searchResults.length;
+        countText.innerHTML = `Found <strong>${count}</strong> ${count === 1 ? "essay" : "essays"}`;
+      }
+
       list.removeAttribute("hidden");
       list.style.display = "block";
       activeIndex = 0;
 
-      list.innerHTML = results.map((item, idx) => `
-        <li role="option" id="search-opt-${idx}" aria-selected="${idx === 0}">
-          <a href="/${item.id}" class="search-result-link ${idx === 0 ? 'selected' : ''}">
-            <div class="search-result-meta">
-              <span class="search-result-date">${item.date}</span>
-              ${item.tags[0] ? `<span class="search-result-tag">#${item.tags[0]}</span>` : ''}
-            </div>
-            <div class="search-result-title">${item.title}</div>
-            ${item.description ? `<div class="search-result-desc">${item.description}</div>` : ''}
-          </a>
-        </li>
-      `).join("");
+      list.innerHTML = searchResults
+        .map(({ item, matches }, idx) => {
+          const titleMatch = matches?.find((m) => m.key === "title");
+          const descMatch = matches?.find((m) => m.key === "description");
+          const contentMatch = matches?.find((m) => m.key === "content");
+          const highlightedTitle = highlightWithMatches(item.title, titleMatch?.indices, q);
+
+          // Smart snippet generation:
+          // If match was in content and not in description (or description is empty), show excerpt around content match!
+          let textForDesc = item.description || "";
+          let descIndices = descMatch?.indices;
+
+          if ((!textForDesc || (!descMatch && contentMatch)) && item.content) {
+            if (contentMatch && contentMatch.indices && contentMatch.indices.length > 0) {
+              const [startIdx] = contentMatch.indices[0];
+              const snippetStart = Math.max(0, startIdx - 50);
+              const snippetEnd = Math.min(item.content.length, startIdx + 110);
+              const rawSnippet = item.content.slice(snippetStart, snippetEnd).trim();
+              textForDesc = (snippetStart > 0 ? "..." : "") + rawSnippet + (snippetEnd < item.content.length ? "..." : "");
+              descIndices = undefined; // Use token fallback highlighting on snippet
+            } else if (!textForDesc) {
+              textForDesc = item.content.slice(0, 140) + "...";
+            }
+          }
+          const highlightedDesc = highlightWithMatches(textForDesc, descIndices, q);
+
+          // Matched tags logic
+          const lowerQ = q.toLowerCase();
+          const matchedTags: string[] = [];
+          const otherTags: string[] = [];
+
+          (item.tags || []).forEach((t) => {
+            if (t.toLowerCase().includes(lowerQ)) {
+              matchedTags.push(t);
+            } else {
+              otherTags.push(t);
+            }
+          });
+
+          // Show matched tags first, then other tags (up to 3 total)
+          const displayTags = [...matchedTags, ...otherTags].slice(0, 3);
+          const tagsHtml = displayTags
+            .map((tag) => {
+              const isMatched = matchedTags.includes(tag);
+              const tagText = isMatched ? highlightWithMatches(tag, undefined, q) : escapeHtml(tag);
+              return `<span class="search-result-tag ${isMatched ? "matched" : ""}">${tagText}</span>`;
+            })
+            .join("");
+
+          const formattedDate = formatDate(item.date);
+          const laneHtml = item.lane
+            ? `<span class="search-result-lane">${escapeHtml(item.lane)}</span>`
+            : item.categories && item.categories[0] && item.categories[0] !== "others"
+            ? `<span class="search-result-lane">${escapeHtml(item.categories[0])}</span>`
+            : "";
+
+          return `
+            <li role="option" id="search-opt-${idx}" aria-selected="${idx === 0}" class="search-result-item">
+              <a href="/${escapeHtml(item.id)}" class="search-result-link ${idx === 0 ? "selected" : ""}" data-idx="${idx}">
+                <div class="search-result-meta">
+                  ${formattedDate ? `<span class="search-result-date">${formattedDate}</span>` : ""}
+                  ${laneHtml}
+                  ${tagsHtml ? `<div class="search-result-tags">${tagsHtml}</div>` : ""}
+                </div>
+                <div class="search-result-title">${highlightedTitle}</div>
+                ${highlightedDesc ? `<div class="search-result-desc">${highlightedDesc}</div>` : ""}
+              </a>
+            </li>
+          `;
+        })
+        .join("");
+
+      // Wire mouse hover to seamlessly sync activeIndex
+      const links = list.querySelectorAll<HTMLAnchorElement>(".search-result-link");
+      links.forEach((link) => {
+        link.addEventListener("mouseenter", () => {
+          const idx = parseInt(link.dataset.idx || "0", 10);
+          activeIndex = idx;
+          updateSelection(links);
+        });
+      });
+    }
+
+    function updateSelection(links: NodeListOf<HTMLAnchorElement>) {
+      links.forEach((link, idx) => {
+        if (idx === activeIndex) {
+          link.classList.add("selected");
+          link.parentElement?.setAttribute("aria-selected", "true");
+          link.scrollIntoView({ block: "nearest" });
+        } else {
+          link.classList.remove("selected");
+          link.parentElement?.setAttribute("aria-selected", "false");
+        }
+      });
     }
 
     input.addEventListener("input", (e) => {
@@ -236,35 +572,24 @@
         return;
       }
 
-      const items = list.querySelectorAll(".search-result-link");
-      if (items.length === 0) return;
+      const links = list.querySelectorAll<HTMLAnchorElement>(".search-result-link");
+      if (links.length === 0) return;
 
       if (e.key === "ArrowDown") {
         e.preventDefault();
-        activeIndex = (activeIndex + 1) % items.length;
-        updateSelection(items);
+        activeIndex = (activeIndex + 1) % links.length;
+        updateSelection(links);
       } else if (e.key === "ArrowUp") {
         e.preventDefault();
-        activeIndex = (activeIndex - 1 + items.length) % items.length;
-        updateSelection(items);
+        activeIndex = (activeIndex - 1 + links.length) % links.length;
+        updateSelection(links);
       } else if (e.key === "Enter") {
         e.preventDefault();
-        if (activeIndex >= 0 && items[activeIndex]) {
-          (items[activeIndex] as HTMLAnchorElement).click();
+        if (activeIndex >= 0 && links[activeIndex]) {
+          links[activeIndex].click();
         }
       }
     });
-
-    function updateSelection(items: NodeListOf<Element>) {
-      items.forEach((item, idx) => {
-        if (idx === activeIndex) {
-          item.classList.add("selected");
-          item.scrollIntoView({ block: "nearest" });
-        } else {
-          item.classList.remove("selected");
-        }
-      });
-    }
   }
 
   if (document.readyState === "loading") {
@@ -283,7 +608,7 @@
     z-index: 1000;
     align-items: flex-start;
     justify-content: center;
-    padding: clamp(1rem, 5vw, 4rem) 1rem;
+    padding: clamp(1rem, 5vh, 3.5rem) 1rem;
   }
 
   .search-overlay.is-open {
@@ -298,18 +623,18 @@
   .search-backdrop {
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.8);
-    backdrop-filter: blur(4px);
+    background: rgba(4, 4, 4, 0.85);
+    backdrop-filter: blur(6px);
   }
 
   .search-dialog {
     position: relative;
-    width: min(100%, 640px);
-    max-height: 80vh;
-    background: var(--paper-raised, #181818);
-    border: 1px solid var(--rule, #333);
-    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.7);
-    border-radius: 4px;
+    width: min(100%, 680px);
+    max-height: 85vh;
+    background: var(--paper-raised, #161616);
+    border: 1px solid var(--rule, #303030);
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -319,14 +644,14 @@
   .search-header {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    padding: 0.85rem 1.15rem;
-    border-bottom: 1px solid var(--rule, #333);
-    background: var(--paper, #080808);
+    gap: 0.85rem;
+    padding: 0.95rem 1.25rem;
+    border-bottom: 1px solid var(--rule, #2c2c2c);
+    background: var(--paper, #0b0b0b);
   }
 
   .search-icon {
-    color: var(--muted, #a9a5a0);
+    color: var(--muted, #9b9792);
     flex-shrink: 0;
   }
 
@@ -341,7 +666,7 @@
   }
 
   .search-input::placeholder {
-    color: var(--muted, #a9a5a0);
+    color: var(--muted, #85817c);
     font-family: var(--sans);
     font-size: 0.95rem;
   }
@@ -354,32 +679,127 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--muted, #a9a5a0);
+    color: var(--muted, #9b9792);
     border-radius: 4px;
     transition: color 0.15s, border-color 0.15s, background-color 0.15s;
-    min-width: 36px;
-    min-height: 36px;
+    min-width: 34px;
+    min-height: 34px;
   }
 
   .search-close:hover {
     color: var(--ink, #edebe5);
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.08);
     border-color: var(--rule, #333);
+  }
+
+  .search-meta-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.45rem 1.25rem;
+    background: rgba(0, 0, 0, 0.35);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 0.76rem;
+    color: var(--muted, #9b9792);
+  }
+
+  .search-count-text strong {
+    color: var(--ink, #edebe5);
+    font-weight: 600;
+  }
+
+  .search-relevance-hint {
+    color: #706d69;
+    font-size: 0.72rem;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
   }
 
   .search-results-container {
     flex: 1;
     overflow-y: auto;
-    max-height: 50vh;
-    padding: 0.5rem 0;
+    max-height: 55vh;
+    padding: 0.35rem 0;
+  }
+
+  .search-results-container::-webkit-scrollbar {
+    width: 6px;
+  }
+  .search-results-container::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .search-results-container::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 3px;
   }
 
   .search-message {
-    padding: 2.5rem 1.5rem;
+    padding: 2.25rem 1.5rem;
     text-align: center;
-    color: var(--muted, #a9a5a0);
+    color: var(--muted, #9b9792);
     font-family: var(--sans);
-    font-size: 0.95rem;
+  }
+
+  .search-empty-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--ink, #edebe5);
+    margin-bottom: 0.35rem;
+  }
+
+  .search-empty-sub {
+    font-size: 0.88rem;
+    color: var(--muted, #9b9792);
+    margin: 0 0 1.25rem 0;
+  }
+
+  .search-empty-sub code {
+    background: #222;
+    padding: 0.1rem 0.35rem;
+    border-radius: 3px;
+    font-size: 0.82rem;
+    color: var(--ink, #edebe5);
+  }
+
+  .search-query-highlight {
+    color: var(--accent, #ef6666);
+    font-weight: 600;
+  }
+
+  .search-chips-label {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #787570;
+    margin-bottom: 0.6rem;
+  }
+
+  .search-chips {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  .search-chip {
+    background: #202020;
+    border: 1px solid #333;
+    color: var(--ink, #edebe5);
+    border-radius: 9999px;
+    padding: 0.28rem 0.75rem;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, transform 0.1s;
+    font-family: var(--mono);
+  }
+
+  .search-chip:hover {
+    background: #2d2d2d;
+    border-color: var(--portfolio-red, #b91c1c);
+    color: #fff;
+    transform: translateY(-1px);
   }
 
   .search-results-list {
@@ -392,32 +812,70 @@
     display: none !important;
   }
 
+  .search-result-item {
+    margin: 0;
+    padding: 0;
+  }
+
   .search-result-link {
     display: block;
-    padding: 0.75rem 1.25rem;
+    padding: 0.85rem 1.35rem;
     text-decoration: none;
     border-left: 3px solid transparent;
-    transition: background 0.15s, border-color 0.15s;
+    transition: background 0.12s ease, border-color 0.12s ease;
   }
 
   .search-result-link:hover,
   .search-result-link.selected {
-    background: var(--paper, #080808);
+    background: #111111;
     border-left-color: var(--portfolio-red, #b91c1c);
   }
 
   .search-result-meta {
     display: flex;
-    gap: 0.6rem;
+    flex-wrap: wrap;
+    gap: 0.65rem;
     align-items: center;
-    font-size: 0.78rem;
-    color: var(--muted, #a9a5a0);
-    margin-bottom: 0.2rem;
+    font-size: 0.75rem;
+    color: var(--muted, #9b9792);
+    margin-bottom: 0.35rem;
+  }
+
+  .search-result-date {
+    color: #8c8882;
+    font-family: var(--sans);
+  }
+
+  .search-result-lane {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 600;
+    padding: 0.1rem 0.4rem;
+    background: rgba(255, 255, 255, 0.07);
+    color: #c4c0b9;
+    border-radius: 3px;
+  }
+
+  .search-result-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
   }
 
   .search-result-tag {
-    color: var(--accent, #ef6666);
+    color: #9c9790;
     font-family: var(--mono);
+    font-size: 0.72rem;
+    background: rgba(255, 255, 255, 0.04);
+    padding: 0.1rem 0.35rem;
+    border-radius: 3px;
+  }
+
+  .search-result-tag.matched {
+    color: #ff9999;
+    background: rgba(239, 102, 102, 0.12);
+    border: 1px solid rgba(239, 102, 102, 0.25);
   }
 
   .search-result-title {
@@ -425,38 +883,70 @@
     font-weight: 600;
     font-size: 1.05rem;
     color: var(--ink, #edebe5);
-    line-height: 1.3;
+    line-height: 1.35;
+    margin-bottom: 0.3rem;
   }
 
   .search-result-desc {
-    font-size: 0.85rem;
+    font-size: 0.86rem;
     color: var(--muted, #a9a5a0);
-    margin-top: 0.25rem;
-    white-space: nowrap;
+    line-height: 1.45;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  :global(.search-highlight) {
+    background: rgba(239, 102, 102, 0.22) !important;
+    color: #ff9999 !important;
+    font-weight: 600 !important;
+    padding: 0.05em 0.2em !important;
+    border-radius: 2px !important;
   }
 
   .search-footer {
     display: flex;
     justify-content: flex-end;
-    gap: 1.25rem;
-    padding: 0.65rem 1.25rem;
-    background: var(--paper, #080808);
-    border-top: 1px solid var(--rule, #333);
+    align-items: center;
+    padding: 0.7rem 1.25rem;
+    background: var(--paper, #0b0b0b);
+    border-top: 1px solid var(--rule, #2c2c2c);
     font-size: 0.78rem;
-    color: var(--muted, #a9a5a0);
+    color: var(--muted, #9b9792);
+  }
+
+  .search-shortcuts {
+    display: flex;
+    gap: 1.15rem;
   }
 
   .search-footer kbd {
     display: inline-block;
-    padding: 0.15rem 0.45rem;
+    padding: 0.15rem 0.42rem;
     font-family: var(--mono);
-    font-size: 0.75rem;
-    line-height: 1;
-    color: var(--muted, #a9a5a0);
-    background: #252525;
-    border: 1px solid var(--rule, #333);
+    font-size: 0.72rem;
+    line-height: 1.1;
+    color: #bbb7b1;
+    background: #222222;
+    border: 1px solid #383838;
     border-radius: 3px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  }
+
+  @media (max-width: 640px) {
+    .search-overlay {
+      padding: 0.75rem;
+    }
+    .search-header {
+      padding: 0.85rem 1rem;
+    }
+    .search-result-link {
+      padding: 0.75rem 1rem;
+    }
+    .search-footer {
+      justify-content: center;
+    }
   }
 </style>
